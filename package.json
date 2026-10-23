@@ -4,7 +4,10 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"dev": "node --watch src/index.js"
+		"dev": "node --watch src/index.js",
+		"start": "node src/index.js",
+		"migration:new": "cd db && sequelize-cli migration:generate",
+		"db:migrate": "cd db && sequelize-cli db:migrate"
 	},
 	"keywords": [],
 	"author": "",
