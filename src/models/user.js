@@ -31,7 +31,7 @@ export const User = sequelize.define(
 				notEmpty: true,
 			},
 		},
-		password_hash: {
+		passwordHash: {
 			type: DataTypes.STRING(255),
 			validate: {
 				notEmpty: true,

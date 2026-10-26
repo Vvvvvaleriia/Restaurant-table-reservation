@@ -22,7 +22,7 @@ export const TableType = sequelize.define(
 			type: DataTypes.TEXT,
 			allowNull: true,
 		},
-		price: {
+		markup: {
 			type: DataTypes.DECIMAL(10, 2),
 			allowNull: false,
 			defaultValue: 0,
