@@ -48,6 +48,7 @@ router.post("/", async (req, resp) => {
 			});
 		}
 
+		// перетворення дати
 		const reservationDate = new Date(reservationDatetime);
 
 		if (
@@ -128,11 +129,11 @@ router.post("/", async (req, resp) => {
 
 		return resp.status(201).json(reservation);
 	} catch (error) {
-		if (error.name === "SequelizeValidationError") {
-			return resp.status(400).json({
-				message: error.message,
-			});
-		}
+		// if (error.name === "SequelizeValidationError") {
+		// 	return resp.status(400).json({
+		// 		message: error.message,
+		// 	});
+		// }
 
 		console.error(error);
 
@@ -259,26 +260,22 @@ router.put("/:id", async (req, resp) => {
 		const { reservationDatetime, guests, status, userId, tableId } =
 			req.body;
 
-		let reservationDate;
+		const reservationDate = new Date(reservationDatetime);
 
-		if (reservationDatetime !== undefined) {
-			reservationDate = new Date(reservationDatetime);
+		if (
+			typeof reservationDatetime !== "string" ||
+			!reservationDatetime.trim() ||
+			Number.isNaN(reservationDate.getTime())
+		) {
+			return resp.status(400).json({
+				message: "Invalid reservation date and time",
+			});
+		}
 
-			if (
-				typeof reservationDatetime !== "string" ||
-				!reservationDatetime.trim() ||
-				Number.isNaN(reservationDate.getTime())
-			) {
-				return resp.status(400).json({
-					message: "Invalid reservation date and time",
-				});
-			}
-
-			if (reservationDate <= new Date()) {
-				return resp.status(400).json({
-					message: "Reservation date and time must be in the future",
-				});
-			}
+		if (reservationDate <= new Date()) {
+			return resp.status(400).json({
+				message: "Reservation date and time must be in the future",
+			});
 		}
 
 		if (guests !== undefined && (!Number.isInteger(guests) || guests < 1)) {
@@ -315,22 +312,20 @@ router.put("/:id", async (req, resp) => {
 			}
 		}
 
-		let table;
-
 		if (tableId !== undefined) {
 			if (typeof tableId !== "string" || !uuidRegex.test(tableId)) {
 				return resp.status(400).json({
 					message: "Invalid table ID",
 				});
 			}
+		}
 
-			table = await Table.findByPk(tableId);
+		const table = await Table.findByPk(tableId);
 
-			if (!table) {
-				return resp.status(404).json({
-					message: "Table not found",
-				});
-			}
+		if (!table) {
+			return resp.status(404).json({
+				message: "Table not found",
+			});
 		}
 
 		const targetTableId =

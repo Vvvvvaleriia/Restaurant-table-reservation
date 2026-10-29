@@ -37,7 +37,7 @@ module.exports = {
 			},
 		});
 
-		await queryInterface.addIndex("tables", ["table_types_id"]);
+		await queryInterface.addIndex("tables", ["table_type_id"]);
 	},
 
 	async down(queryInterface, Sequelize) {

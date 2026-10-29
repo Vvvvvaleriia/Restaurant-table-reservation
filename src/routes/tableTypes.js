@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { Table, TableType } from "../models";
+import { TableType } from "../models";
 
 export const router = Router();
 
@@ -28,7 +28,7 @@ router.post("/", async (req, resp) => {
 
 		const { name, description, markup } = req.body;
 
-		if (!name || !markup) {
+		if (name === undefined || markup === undefined) {
 			return resp.status(400).json({
 				message: "Name and markup are required",
 			});
@@ -40,17 +40,19 @@ router.post("/", async (req, resp) => {
 			});
 		}
 
-		if (markup !== "number" && (!Number.isFinite(markup) || markup < 0)) {
+		if (
+			typeof markup !== "number" &&
+			(!Number.isFinite(markup) || markup < 0)
+		) {
 			return resp.status(400).json({
 				message: "Markup must be a non-negative number",
 			});
 		}
 
 		if (
-			(description !== undefined &&
-				description !== null &&
-				typeof description !== "string") ||
-			!description.trim()
+			description !== undefined &&
+			description !== null &&
+			(typeof description !== "string" || !description.trim())
 		) {
 			return resp.status(400).json({
 				message: "Description must be a string",
@@ -83,11 +85,11 @@ router.post("/", async (req, resp) => {
 			});
 		}
 
-		if (error.name === "SequelizeValidationError") {
-			return resp.status(400).json({
-				message: error.message,
-			});
-		}
+		// if (error.name === "SequelizeValidationError") {
+		// 	return resp.status(400).json({
+		// 		message: error.message,
+		// 	});
+		// }
 
 		return resp.status(500).json({
 			message: "Internal server error",
@@ -194,7 +196,7 @@ router.put("/:id", async (req, resp) => {
 				.json({ message: "Invalid or empty request body" });
 		}
 
-		const tableType = await TableType.findByPk(req.params.id);
+		const tableType = await TableType.findByPk(id);
 
 		if (!tableType) {
 			return resp.status(404).json({
@@ -260,11 +262,11 @@ router.put("/:id", async (req, resp) => {
 			});
 		}
 
-		if (error.name === "SequelizeValidationError") {
-			return resp.status(400).json({
-				message: error.message,
-			});
-		}
+		// if (error.name === "SequelizeValidationError") {
+		// 	return resp.status(400).json({
+		// 		message: error.message,
+		// 	});
+		// }
 
 		return resp.status(500).json({
 			message: "Internal server error",
@@ -286,7 +288,7 @@ router.delete("/:id", async (req, resp) => {
 			});
 		}
 
-		const tableType = await TableType.findByPk(req.params.id);
+		const tableType = await TableType.findByPk(id);
 
 		if (!tableType) {
 			return resp.status(404).json({

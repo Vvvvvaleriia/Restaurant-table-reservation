@@ -97,11 +97,11 @@ router.post("/", async (req, resp) => {
 			});
 		}
 
-		if (error.name === "SequelizeValidationError") {
-			return resp.status(400).json({
-				message: error.message,
-			});
-		}
+		// if (error.name === "SequelizeValidationError") {
+		// 	return resp.status(400).json({
+		// 		message: error.message,
+		// 	});
+		// }
 
 		return resp.status(500).json({
 			message: "Internal server error",
@@ -208,7 +208,7 @@ router.put("/:id", async (req, resp) => {
 				.json({ message: "Invalid or empty request body" });
 		}
 
-		const table = await Table.findByPk(req.params.id);
+		const table = await Table.findByPk(id);
 
 		if (!table) {
 			return resp.status(404).json({
@@ -256,7 +256,7 @@ router.put("/:id", async (req, resp) => {
 				where: { tableNumber },
 			});
 
-			if (existingTable && existingTable.id !== table.id) {
+			if (existingTable) {
 				return resp.status(409).json({
 					message: "This table number already exists",
 				});
@@ -279,11 +279,11 @@ router.put("/:id", async (req, resp) => {
 			});
 		}
 
-		if (error.name === "SequelizeValidationError") {
-			return resp.status(400).json({
-				message: error.message,
-			});
-		}
+		// if (error.name === "SequelizeValidationError") {
+		// 	return resp.status(400).json({
+		// 		message: error.message,
+		// 	});
+		// }
 
 		return resp.status(500).json({
 			message: "Internal server error",

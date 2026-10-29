@@ -53,7 +53,7 @@ router.post("/", async (req, resp) => {
 		if (
 			comment !== undefined &&
 			comment !== null &&
-			typeof comment !== "string"
+			(typeof comment !== "string" || !comment.trim())
 		) {
 			return resp.status(400).json({
 				message: "Comment must be a string",
@@ -76,11 +76,11 @@ router.post("/", async (req, resp) => {
 
 		resp.status(201).json(review);
 	} catch (error) {
-		if (error.name === "SequelizeValidationError") {
-			return resp.status(400).json({
-				message: error.message,
-			});
-		}
+		// if (error.name === "SequelizeValidationError") {
+		// 	return resp.status(400).json({
+		// 		message: error.message,
+		// 	});
+		// }
 
 		return resp.status(500).json({
 			message: "Internal server error",

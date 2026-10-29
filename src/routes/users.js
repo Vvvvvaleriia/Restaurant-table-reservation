@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { TableType, User } from "../models/index.js";
-import { bcrypy } from "bcrypt";
+import bcrypt from "bcrypt";
 
 export const router = Router();
 
 router.post("/", async (req, resp) => {
 	try {
+		// перевірка наявності і типу req.body
 		if (
 			!req.body ||
 			typeof req.body !== "object" ||
@@ -16,6 +17,7 @@ router.post("/", async (req, resp) => {
 			});
 		}
 
+		// перевірка на зайві поля
 		const allowedFields = ["name", "email", "phone", "password"];
 		const invalidFields = Object.keys(req.body).some(
 			(field) => !allowedFields.includes(field),
@@ -35,6 +37,7 @@ router.post("/", async (req, resp) => {
 			});
 		}
 
+		// перевірка на тип даних
 		if (
 			typeof name !== "string" ||
 			typeof email !== "string" ||
@@ -46,6 +49,7 @@ router.post("/", async (req, resp) => {
 			});
 		}
 
+		// перевірка на порожні рядки
 		if (
 			!name.trim() ||
 			!email.trim() ||
@@ -81,13 +85,13 @@ router.post("/", async (req, resp) => {
 			});
 		}
 
-		if (password.length < 8 || password.length > 72) {
-			return resp.status(400).json({
-				message: "Password must be between 8 and 72 characters",
-			});
-		}
+		// if (password.length < 8 || password.length > 72) {
+		// 	return resp.status(400).json({
+		// 		message: "Password must be between 8 and 72 characters",
+		// 	});
+		// }
 
-		const passwordHash = await bcrypy.hash(password, 10);
+		const passwordHash = await bcrypt.hash(password, 10);
 
 		const user = await User.create({
 			name: name.trim(),
@@ -109,11 +113,11 @@ router.post("/", async (req, resp) => {
 			});
 		}
 
-		if (error.name === "SequelizeValidationError") {
-			return resp.status(400).json({
-				message: error.message,
-			});
-		}
+		// if (error.name === "SequelizeValidationError") {
+		// 	return resp.status(400).json({
+		// 		message: error.message,
+		// 	});
+		// }
 
 		return resp.status(500).json({
 			message: "Internal server error",
@@ -128,6 +132,7 @@ router.get("/", async (req, resp) => {
 		const parsedLimit = Number(limit);
 		const parsedPage = Number(page);
 
+		// перевірка на ціле число
 		if (
 			!Number.isInteger(parsedLimit) ||
 			!Number.isInteger(parsedPage) ||
@@ -236,10 +241,12 @@ router.put("/:id", async (req, resp) => {
 			}
 		}
 
+		const normalizedEmail = email.trim().toLowerCase();
+
 		if (email !== undefined) {
 			if (
 				typeof email !== "string" ||
-				!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+				!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
 			) {
 				return resp.status(400).json({
 					message: "Invalid email",
@@ -265,7 +272,7 @@ router.put("/:id", async (req, resp) => {
 
 		await user.update({
 			...(name !== undefined && { name: name.trim() }),
-			...(email !== undefined && { email: email.trim().toLowerCase() }),
+			...(email !== undefined && { email: normalizedEmail }),
 			...(phone !== undefined && { phone: phone.trim() }),
 		});
 
@@ -282,11 +289,11 @@ router.put("/:id", async (req, resp) => {
 			});
 		}
 
-		if (error.name === "SequelizeValidationError") {
-			return resp.status(400).json({
-				message: error.message,
-			});
-		}
+		// if (error.name === "SequelizeValidationError") {
+		// 	return resp.status(400).json({
+		// 		message: error.message,
+		// 	});
+		// }
 
 		return resp.status(500).json({
 			message: "Internal server error",
@@ -321,12 +328,6 @@ router.delete("/:id", async (req, resp) => {
 			message: "User deleted successfully",
 		});
 	} catch (error) {
-		if (error.name === "SequelizeForeignKeyConstraintError") {
-			return resp.status(409).json({
-				message: "Cannot delete a user that is in use",
-			});
-		}
-
 		return resp.status(500).json({ message: "Internal server error" });
 	}
 });
