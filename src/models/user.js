@@ -37,6 +37,10 @@ export const User = sequelize.define(
 				notEmpty: true,
 			},
 		},
+		refreshToken: {
+			type: DataTypes.TEXT,
+			allowNull: true,
+		},
 	},
 	{
 		tableName: "users",
