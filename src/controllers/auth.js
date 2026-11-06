@@ -33,7 +33,7 @@ export default class AuthController {
 
 	static async profile(req, resp) {
 		try {
-			const user = await AuthService.profile(req.headers.authorization);
+			const user = await AuthService.profile(req.user.id);
 
 			return resp.status(200).json(user);
 		} catch (error) {

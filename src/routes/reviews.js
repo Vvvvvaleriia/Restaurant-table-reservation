@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { Review, User } from "../models";
+import authMiddleware from "../middleware/checkToken.js";
 
 export const router = Router();
 
-router.post("/", ReviewController.create);
+router.post("/", authMiddleware, ReviewController.create);
 router.get("/", ReviewController.getAll);
 router.get("/:id", ReviewController.getById);
-router.put("/:id", ReviewController.update);
-router.delete("/:id", ReviewController.delete);
+router.put("/:id", authMiddleware, ReviewController.update);
+router.delete("/:id", authMiddleware, ReviewController.delete);

@@ -148,40 +148,15 @@ export default class AuthService {
 		return { accessToken, refreshToken };
 	}
 
-	static async profile(authorization) {
-		if (!authorization || !authorization.startsWith("Bearer ")) {
-			throw Object.assign(new Error("Access token is required"), {
-				status: 401,
+	static async profile(userId) {
+		const user = await AuthRepository.findProfile(userId);
+
+		if (!user) {
+			throw Object.assign(new Error("User not found"), {
+				status: 404,
 			});
 		}
-
-		const accessToken = authorization.split(" ")[1];
-
-		try {
-			const payload = jwt.verify(accessToken, JWT_ACCESS_SECRET);
-
-			const user = await AuthRepository.findProfile(payload.id);
-
-			if (!user) {
-				throw Object.assign(new Error("User not found"), {
-					status: 404,
-				});
-			}
-			return user;
-		} catch (error) {
-			if (error.status) {
-				throw error;
-			}
-
-			throw Object.assign(
-				new Error(
-					error.name === "TokenExpiredError"
-						? "Access token expired"
-						: "Invalid access token",
-				),
-				{ status: 401 },
-			);
-		}
+		return user;
 	}
 
 	static async refresh(body) {
