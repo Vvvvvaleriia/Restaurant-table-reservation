@@ -1,0 +1,33 @@
+import { TableType } from "../models.js";
+
+export default class TableTypeRepository {
+	static async create(data) {
+		return await TableType.create(data);
+	}
+
+	static async findAll(limit, offset) {
+		return await TableType.findAll({
+			limit: limit,
+			offset: offset,
+			order: [["createdAt", "DESC"]],
+		});
+	}
+
+	static async findById(id) {
+		return await TableType.findPk(id);
+	}
+
+	static async findByName(name) {
+		return await TableType.findOne({
+			where: { name },
+		});
+	}
+
+	static async update(tableType, data) {
+		return await tableType.update(data);
+	}
+
+	static async delete(tableType) {
+		return await tableType.destroy();
+	}
+}

@@ -1,0 +1,162 @@
+import UserRepository from "../repositories/user.js";
+
+export default class UserService {
+	static async getAll(limit, page) {
+		const parsedLimit = Number(limit);
+		const parsedPage = Number(page);
+
+		if (
+			!Number.isInteger(parsedLimit) ||
+			!Number.isInteger(parsedPage) ||
+			parsedLimit < 1 ||
+			parsedLimit > 100 ||
+			parsedPage < 1
+		) {
+			throw Object.assign(
+				new Error(
+					"Limit must be 1-100 and page must be a positive integer",
+				),
+				{ status: 400 },
+			);
+		}
+
+		const offset = (parsedPage - 1) * parsedLimit;
+
+		return await TableTypeRepository.findAll({
+			parsedLimit,
+			offset,
+		});
+	}
+
+	static async getById(id) {
+		if (
+			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+				id,
+			)
+		) {
+			throw Object.assign(new Error("Invalid table type ID"), {
+				status: 400,
+			});
+		}
+
+		const user = await UserRepository.findById(id);
+
+		if (!user) {
+			throw Object.assign(new Error("User not found"), {
+				status: 404,
+			});
+		}
+
+		return user;
+	}
+
+	static async update(id, data) {
+		if (!data || typeof data !== "object" || Array.isArray(data)) {
+			throw Object.assign(new Error("Request body must be an object"), {
+				status: 400,
+			});
+		}
+
+		if (
+			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+				id,
+			)
+		) {
+			throw Object.assign(new Error("Invalid user ID"), {
+				status: 400,
+			});
+		}
+
+		const { name, email, phone } = data;
+
+		const allowedFields = ["name", "email", "phone"];
+		const fields = Object.keys(data);
+
+		if (
+			fields.length === 0 ||
+			fields.some((field) => !allowedFields.includes(field))
+		) {
+			throw Object.assign(new Error("Invalid or empty request body"), {
+				status: 400,
+			});
+		}
+
+		if (name !== undefined) {
+			if (typeof name !== "string" || !name.trim()) {
+				throw Object.assign(new Error("Invalid name"), {
+					status: 400,
+				});
+			}
+		}
+
+		let normalizedEmail;
+		if (email !== undefined) {
+			if (typeof email !== "string") {
+				throw Object.assign(new Error("Invalid email"), {
+					status: 400,
+				});
+			}
+		}
+
+		normalizedEmail = email.trim().toLowerCase();
+
+		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+			throw Object.assign(new Error("Invalid email"), {
+				status: 400,
+			});
+		}
+
+		if (phone !== undefined) {
+			if (typeof phone !== "string" || !/^\+?[0-9]{10,15}$/.test(phone)) {
+				throw Object.assign(new Error("Invalid phone number"), {
+					status: 400,
+				});
+			}
+		}
+
+		const user = await UserRepository.findById(id);
+
+		if (!user) {
+			throw Object.assign(new Error("User not found"), {
+				status: 404,
+			});
+		}
+
+		await UserRepository.update(user, {
+			...(name !== undefined && { name: name.trim() }),
+			...(email !== undefined && { email: normalizedEmail }),
+			...(phone !== undefined && { phone: phone.trim() }),
+		});
+
+		return {
+			id: user.id,
+			name: user.name,
+			email: user.email,
+			phone: user.phone,
+		};
+	}
+
+	static async delete(id) {
+		const { id } = req.params;
+
+		if (
+			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+				id,
+			)
+		) {
+			throw Object.assign(new Error("Invalid user ID"), {
+				status: 400,
+			});
+		}
+
+		const user = await UserRepository.findById(id);
+
+		if (!user) {
+			throw Object.assign(new Error("User not found"), {
+				status: 404,
+			});
+		}
+
+		return await UserRepository.delete(user);
+	}
+}
