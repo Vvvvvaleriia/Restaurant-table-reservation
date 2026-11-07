@@ -22,8 +22,8 @@ export default class UserService {
 
 		const offset = (parsedPage - 1) * parsedLimit;
 
-		return await TableTypeRepository.findAll({
-			parsedLimit,
+		return await UserRepository.findAll({
+			limit: parsedLimit,
 			offset,
 		});
 	}
@@ -34,7 +34,7 @@ export default class UserService {
 				id,
 			)
 		) {
-			throw Object.assign(new Error("Invalid table type ID"), {
+			throw Object.assign(new Error("Invalid user ID"), {
 				status: 400,
 			});
 		}
@@ -75,6 +75,14 @@ export default class UserService {
 			});
 		}
 
+		const user = await UserRepository.findById(id);
+
+		if (!user) {
+			throw Object.assign(new Error("User not found"), {
+				status: 404,
+			});
+		}
+
 		if (name !== undefined) {
 			if (typeof name !== "string" || !name.trim()) {
 				throw Object.assign(new Error("Invalid name"), {
@@ -90,30 +98,36 @@ export default class UserService {
 					status: 400,
 				});
 			}
-		}
 
-		normalizedEmail = email.trim().toLowerCase();
+			normalizedEmail = email.trim().toLowerCase();
 
-		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-			throw Object.assign(new Error("Invalid email"), {
-				status: 400,
-			});
-		}
-
-		if (phone !== undefined) {
-			if (typeof phone !== "string" || !/^\+?[0-9]{10,15}$/.test(phone)) {
-				throw Object.assign(new Error("Invalid phone number"), {
+			if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+				throw Object.assign(new Error("Invalid email"), {
 					status: 400,
 				});
 			}
 		}
 
-		const user = await UserRepository.findById(id);
+		if (email !== undefined) {
+			const existingUser =
+				await UserRepository.findByEmail(normalizedEmail);
 
-		if (!user) {
-			throw Object.assign(new Error("User not found"), {
-				status: 404,
-			});
+			if (existingUser && existingUser.id !== user.id) {
+				throw Object.assign(new Error("Email already exists"), {
+					status: 409,
+				});
+			}
+		}
+
+		if (phone !== undefined) {
+			if (
+				typeof phone !== "string" ||
+				!/^\+?[0-9]{10,15}$/.test(phone.trim())
+			) {
+				throw Object.assign(new Error("Invalid phone number"), {
+					status: 400,
+				});
+			}
 		}
 
 		await UserRepository.update(user, {
@@ -131,8 +145,6 @@ export default class UserService {
 	}
 
 	static async delete(id) {
-		const { id } = req.params;
-
 		if (
 			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
 				id,

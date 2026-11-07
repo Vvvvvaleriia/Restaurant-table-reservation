@@ -9,7 +9,7 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 export default class AuthService {
 	static async register(body) {
 		const allowedFields = ["name", "email", "phone", "password"];
-		const invalidFields = Object.keys(req.body).some(
+		const invalidFields = Object.keys(body).some(
 			(field) => !allowedFields.includes(field),
 		);
 
@@ -46,7 +46,7 @@ export default class AuthService {
 			!normalizedName ||
 			!normalizedEmail ||
 			!normalizedPhone ||
-			!password()
+			!password.trim()
 		) {
 			throw Object.assign(new Error("Fields cannot be empty"), {
 				status: 400,
@@ -65,7 +65,7 @@ export default class AuthService {
 			});
 		}
 
-		const existingUser = await UserRepository.findByEMail({
+		const existingUser = await UserRepository.findByEmail({
 			normalizedEmail,
 		});
 
@@ -84,9 +84,9 @@ export default class AuthService {
 		const passwordHash = await bcrypt.hash(password, 10);
 
 		const user = await AuthRepository.create({
-			name: name.trim(),
+			name: normalizedName,
 			email: normalizedEmail,
-			phone: phone.trim(),
+			phone: normalizedPhone,
 			passwordHash,
 		});
 
@@ -114,11 +114,11 @@ export default class AuthService {
 
 		const normalizedEmail = email.trim().toLowerCase();
 
-		const user = await UserRepository.findByEMail({ normalizedEmail });
+		const user = await UserRepository.findByEmail({ normalizedEmail });
 
 		if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-			return resp.status(401).json({
-				message: "Invalid email or password",
+			throw Object.assign(new Error("Invalid email or password"), {
+				status: 401,
 			});
 		}
 
@@ -132,7 +132,7 @@ export default class AuthService {
 			expiresIn: "7d",
 		});
 
-		await AuthRepository.updataRefreshToken(user.id, refreshToken);
+		await AuthRepository.updateRefreshToken(user.id, refreshToken);
 		return { accessToken, refreshToken };
 	}
 
@@ -156,42 +156,37 @@ export default class AuthService {
 			});
 		}
 
+		let payload;
 		try {
-			const payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
-
-			const user = await AuthRepository.findById(payload.id);
-
-			if (!user || user.refreshToken !== refreshToken) {
-				throw Object.assign(new Error("Invalid refresh token"), {
-					status: 401,
-				});
-			}
-
-			const accessToken = jwt.sign({ id: user.id }, JWT_ACCESS_SECRET, {
-				expiresIn: "15m",
-			});
-
-			const newRefreshToken = jwt.sign(
-				{ id: user.id },
-				JWT_REFRESH_SECRET,
-				{ expiresIn: "7d" },
-			);
-
-			await AuthRepository.updataRefreshToken(user.id, newRefreshToken);
-
-			return {
-				accessToken,
-				refreshToken: newRefreshToken,
-			};
-		} catch (error) {
-			if (error.status) {
-				throw error;
-			}
-
+			payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+		} catch {
 			throw Object.assign(new Error("Invalid or expired refresh token"), {
 				status: 401,
 			});
 		}
+
+		const user = await AuthRepository.findById(payload.id);
+
+		if (!user || user.refreshToken !== refreshToken) {
+			throw Object.assign(new Error("Invalid refresh token"), {
+				status: 401,
+			});
+		}
+
+		const accessToken = jwt.sign({ id: user.id }, JWT_ACCESS_SECRET, {
+			expiresIn: "15m",
+		});
+
+		const newRefreshToken = jwt.sign({ id: user.id }, JWT_REFRESH_SECRET, {
+			expiresIn: "7d",
+		});
+
+		await AuthRepository.updateRefreshToken(user.id, newRefreshToken);
+
+		return {
+			accessToken,
+			refreshToken: newRefreshToken,
+		};
 	}
 
 	static async logout(body) {
@@ -206,9 +201,9 @@ export default class AuthService {
 		const user = await AuthRepository.findByRefreshToken(refreshToken);
 
 		if (user) {
-			await AuthRepository.updataRefreshToken(user.id, null);
+			await AuthRepository.updateRefreshToken(user.id, null);
 		}
 
-		return { message: "Logged out successfuly" };
+		return { message: "Logged out successfully" };
 	}
 }

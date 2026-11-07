@@ -20,6 +20,14 @@ export default class UserRepository {
 		});
 	}
 
+	static async findByEmail(email) {
+		return await User.findOne({
+			where: {
+				email,
+			},
+		});
+	}
+
 	static async update(user, data) {
 		return await user.update(data);
 	}

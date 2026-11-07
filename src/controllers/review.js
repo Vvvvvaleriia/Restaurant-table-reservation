@@ -3,7 +3,7 @@ import ReviewService from "../services/review.js";
 export default class ReviewController {
 	static async create(req, resp) {
 		try {
-			const review = await ReviewService.create(req.body);
+			const review = await ReviewService.create(req.user.id, req.body);
 
 			return resp.status(201).json(review);
 		} catch (error) {
@@ -63,7 +63,11 @@ export default class ReviewController {
 		try {
 			const { id } = req.params;
 
-			const review = ReviewService.update(id, req.body);
+			const review = ReviewService.update(
+				req.user.id,
+				req.params.id,
+				req.body,
+			);
 
 			return resp.status(200).json(review);
 		} catch (error) {
@@ -83,7 +87,7 @@ export default class ReviewController {
 		try {
 			const { id } = req.params;
 
-			await ReviewService.delete(id);
+			await ReviewService.delete(req.user.id, req.params.id);
 
 			return resp.status(200).json({
 				message: "Review delete successfuly",

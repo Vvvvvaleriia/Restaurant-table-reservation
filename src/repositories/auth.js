@@ -29,7 +29,7 @@ export default class AuthRepository {
 		return await User.create(data);
 	}
 
-	static async updataRefreshToken(id, refreshToken) {
+	static async updateRefreshToken(id, refreshToken) {
 		return await User.update(
 			{ refreshToken },
 			{

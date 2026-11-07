@@ -27,14 +27,14 @@ export default class TableService {
 			);
 		}
 
-		if (!Number.isFinite(tableNumber) || tableNumber < 1) {
+		if (!Number.isInteger(tableNumber) || tableNumber < 1) {
 			throw Object.assign(
 				new Error("Table number must be a positive number"),
 				{ status: 400 },
 			);
 		}
 
-		if (!Number.isFinite(seats) || seats < 1) {
+		if (!Number.isInteger(seats) || seats < 1) {
 			throw Object.assign(new Error("Seats must be a positive number"), {
 				status: 400,
 			});
@@ -59,7 +59,7 @@ export default class TableService {
 		}
 
 		const existingTableNumber = await TableRepository.findByNumber({
-			where: { tableNumber },
+			tableNumber,
 		});
 
 		if (existingTableNumber) {
@@ -104,7 +104,7 @@ export default class TableService {
 		const offset = (parsedPage - 1) * parsedLimit;
 
 		return await TableRepository.findAll({
-			parsedLimit,
+			limit: parsedLimit,
 			offset,
 		});
 	}
@@ -120,7 +120,7 @@ export default class TableService {
 			});
 		}
 
-		const table = await TableRepository.findByPk(id);
+		const table = await TableRepository.findById(id);
 
 		if (!table) {
 			throw Object.assign(new Error("Table not found"), {
@@ -143,7 +143,7 @@ export default class TableService {
 		}
 
 		const allowedFields = ["tableNumber", "seats", "tableTypeId"];
-		const fields = Object.keys(req.body);
+		const fields = Object.keys(data);
 
 		if (
 			fields.length === 0 ||
@@ -192,12 +192,14 @@ export default class TableService {
 			}
 		}
 
-		const tableType = await TableTypeRepository.findById(tableTypeId);
+		if (tableTypeId !== undefined) {
+			const tableType = await TableTypeRepository.findById(tableTypeId);
 
-		if (!tableType) {
-			throw Object.assign(new Error("Table type not found"), {
-				status: 404,
-			});
+			if (!tableType) {
+				throw Object.assign(new Error("Table type not found"), {
+					status: 404,
+				});
+			}
 		}
 
 		if (tableNumber !== undefined) {
@@ -205,7 +207,7 @@ export default class TableService {
 				tableNumber,
 			});
 
-			if (existingTable && existingTable.id !== id) {
+			if (existingTable && existingTable.id !== table.id) {
 				throw Object.assign(
 					new Error("This table number already exists"),
 					{ status: 409 },

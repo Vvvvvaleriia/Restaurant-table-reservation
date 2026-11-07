@@ -26,7 +26,7 @@ export const Review = sequelize.define(
 			type: DataTypes.UUID,
 			allowNull: false,
 		},
-		reservetionId: {
+		reservationId: {
 			type: DataTypes.UUID,
 			allowNull: false,
 			unique: true,

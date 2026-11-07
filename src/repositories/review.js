@@ -1,4 +1,5 @@
 import { Review } from "../models.js";
+import { Reservation } from "../models/reservation.js";
 
 export default class ReviewRepository {
 	static async create(data) {
@@ -15,6 +16,14 @@ export default class ReviewRepository {
 
 	static async findById(id) {
 		return await Review.findByPk(id);
+	}
+
+	static async findByReservationId(reservationId) {
+		return await Review.findOne({
+			where: {
+				reservationId,
+			},
+		});
 	}
 
 	static async update(review, data) {

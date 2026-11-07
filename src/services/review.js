@@ -2,9 +2,9 @@ import ReviewRepository from "../repositories/review.js";
 import UserRepository from "../repositories/user";
 
 export default class ReviewService {
-	static async create(data) {
-		const allowedFields = ["userId", "rating", "comment"];
-		const invalidFields = Object.keys(req.body).some(
+	static async create(userId, data) {
+		const allowedFields = ["reservationId", "rating", "comment"];
+		const invalidFields = Object.keys(data).some(
 			(field) => !allowedFields.includes(field),
 		);
 
@@ -14,20 +14,23 @@ export default class ReviewService {
 			});
 		}
 
-		const { userId, rating, comment } = data;
+		const { reservationId, rating, comment } = data;
 
-		if (userId === undefined || rating === undefined) {
-			throw Object.assign(new Error("User ID and rating are required"), {
-				status: 400,
-			});
+		if (reservationId === undefined || rating === undefined) {
+			throw Object.assign(
+				new Error("reservation ID and rating are required"),
+				{
+					status: 400,
+				},
+			);
 		}
 
 		if (
 			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-				userId,
+				reservationId,
 			)
 		) {
-			throw Object.assign(new Error("Invalid user ID"), {
+			throw Object.assign(new Error("Invalid reservation ID"), {
 				status: 400,
 			});
 		}
@@ -49,16 +52,42 @@ export default class ReviewService {
 			});
 		}
 
-		const user = await UserRepository.findById(userId);
+		const reservation = await ReservationRepository.findById(reservationId);
 
-		if (!user) {
-			throw Object.assign(new Error("User not found"), {
+		if (!reservation) {
+			throw Object.assign(new Error("Reservation not found"), {
 				status: 404,
 			});
 		}
 
-		await ReviewRepository.create({
+		if (reservation.userId !== userId) {
+			throw Object.assign(new Error("This is not your reservation"), {
+				status: 403,
+			});
+		}
+
+		if (reservation.status !== "completed") {
+			throw Object.assign(
+				new Error(
+					"Review can only be created for completed reservations",
+				),
+				{ status: 400 },
+			);
+		}
+
+		const existingReview =
+			await ReviewRepository.findByReservationId(reservationId);
+
+		if (existingReview) {
+			throw Object.assign(
+				new Error("Review for this reservation already exists"),
+				{ status: 409 },
+			);
+		}
+
+		return await ReviewRepository.create({
 			userId,
+			reservationId,
 			rating,
 			comment: comment?.trim() || null,
 		});
@@ -85,8 +114,8 @@ export default class ReviewService {
 
 		const offset = (parsedPage - 1) * parsedLimit;
 
-		return await TableRepository.findAll({
-			parsedLimit,
+		return await ReviewRepository.findAll({
+			limit: parsedLimit,
 			offset,
 		});
 	}
@@ -97,35 +126,35 @@ export default class ReviewService {
 				id,
 			)
 		) {
-			return resp.status(400).json({
-				message: "Invalid review ID",
+			throw Object.assign(new Error("Invalid review ID"), {
+				status: 400,
 			});
 		}
 
 		const review = await ReviewRepository.findById(id);
 
 		if (!review) {
-			return resp.status(404).json({
-				message: "Review not found",
+			throw Object.assign(new Error("Review not found"), {
+				status: 404,
 			});
 		}
 
 		return review;
 	}
 
-	static async update(id, data) {
+	static async update(userId, id, data) {
 		if (
 			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
 				id,
 			)
 		) {
-			throw Object.assign(new Error("Invalid table ID"), {
+			throw Object.assign(new Error("Invalid review ID"), {
 				status: 400,
 			});
 		}
 
-		const allowedFields = ["userId", "rating", "comment"];
-		const fields = Object.keys(req.body);
+		const allowedFields = ["rating", "comment"];
+		const fields = Object.keys(data);
 
 		if (
 			fields.length === 0 ||
@@ -144,33 +173,17 @@ export default class ReviewService {
 			});
 		}
 
-		const { userId, rating, comment } = data;
-
-		if (userId !== undefined) {
-			if (
-				typeof userId !== "string" ||
-				!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-					userId,
-				)
-			) {
-				throw Object.assign(new Error("Invalid user ID"), {
-					status: 400,
-				});
-			}
-
-			const user = await UserRepository.findById(userId);
-
-			if (!user) {
-				throw Object.assign(new Error("User not found"), {
-					status: 404,
-				});
-			}
+		if (review.userId !== userId) {
+			throw Object.assign(new Error("This is not your review"), {
+				status: 403,
+			});
 		}
 
+		const { rating, comment } = data;
+
 		if (
-			(rating !== undefined && !Number.isInteger(rating)) ||
-			rating < 1 ||
-			rating > 5
+			rating !== undefined &&
+			(!Number.isInteger(rating) || rating < 1 || rating > 5)
 		) {
 			throw Object.assign(
 				new Error("Rating must be an integer between 1 and 5"),
@@ -179,10 +192,9 @@ export default class ReviewService {
 		}
 
 		if (
-			(comment !== undefined &&
-				comment !== null &&
-				typeof comment !== "string") ||
-			comment.trim()
+			comment !== undefined &&
+			comment !== null &&
+			(typeof comment !== "string" || !comment.trim())
 		) {
 			throw Object.assign(new Error("Comment must be a string"), {
 				status: 400,
@@ -190,15 +202,16 @@ export default class ReviewService {
 		}
 
 		await ReviewRepository.update(review, {
-			...(userId !== undefined && { userId }),
 			...(rating !== undefined && { rating }),
 			...(comment !== undefined && {
 				comment: comment === null ? null : comment.trim(),
 			}),
 		});
+
+		return review;
 	}
 
-	static async delete(id) {
+	static async delete(userId, id) {
 		if (
 			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
 				id,
@@ -214,6 +227,12 @@ export default class ReviewService {
 		if (!review) {
 			throw Object.assign(new Error("Review not found"), {
 				status: 404,
+			});
+		}
+
+		if (review.userId !== userId) {
+			throw Object.assign(new Error("This is not your review"), {
+				status: 403,
 			});
 		}
 

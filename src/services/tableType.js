@@ -3,7 +3,7 @@ import TableTypeRepository from "../repositories/tableType.js";
 export default class TableTypeService {
 	static async create(data) {
 		const allowedFields = ["name", "description", "markup"];
-		const invalidFields = Object.keys(req.body).some(
+		const invalidFields = Object.keys(data).some(
 			(field) => !allowedFields.includes(field),
 		);
 
@@ -90,7 +90,7 @@ export default class TableTypeService {
 		const offset = (parsedPage - 1) * parsedLimit;
 
 		return await TableTypeRepository.findAll({
-			parsedLimit,
+			limit: parsedLimit,
 			offset,
 		});
 	}
@@ -106,7 +106,7 @@ export default class TableTypeService {
 			});
 		}
 
-		const tableType = await TableTypeRepository.findByPk(id);
+		const tableType = await TableTypeRepository.findById(id);
 
 		if (!tableType) {
 			throw Object.assign(new Error("Table type not found"), {
@@ -163,10 +163,9 @@ export default class TableTypeService {
 		}
 
 		if (
-			(description !== undefined &&
-				description !== null &&
-				typeof description !== "string") ||
-			!description.trim()
+			description !== undefined &&
+			description !== null &&
+			(typeof description !== "string" || !description.trim())
 		) {
 			throw Object.assign(new Error("Description must be a string"), {
 				status: 400,
@@ -186,7 +185,7 @@ export default class TableTypeService {
 				name: name.trim(),
 			});
 
-			if (existingType && existingType.id !== id) {
+			if (existingType && existingType.id !== tableType.id) {
 				throw Object.assign(
 					new Error("Table type with this name already exists"),
 					{ status: 409 },
@@ -197,10 +196,12 @@ export default class TableTypeService {
 		await TableTypeRepository.update(
 			...(name !== undefined && { name: name.trim() }),
 			...(description !== undefined && {
-				description: description?.trim(),
+				description: description?.trim() || null,
 			}),
-			...(markup !== undefined && { markup: markup }),
+			...(markup !== undefined && { markup }),
 		);
+
+		return tableType;
 	}
 
 	static async delete(id) {

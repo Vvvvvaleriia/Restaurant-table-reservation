@@ -63,7 +63,11 @@ export default class ReservationController {
 		try {
 			const { id } = req.params;
 
-			const reservation = ReviewService.update(id, req.body);
+			const reservation = ReservationService.update(
+				req.user.id,
+				req.params.id,
+				req.body,
+			);
 
 			return resp.status(200).json(reservation);
 		} catch (error) {
@@ -81,9 +85,7 @@ export default class ReservationController {
 
 	static async delete(req, resp) {
 		try {
-			const { id } = req.params;
-
-			await ReviewService.delete(id);
+			await ReviewService.delete(req.user.id, req.params.id);
 
 			return resp.status(200).json({
 				message: "Reservation delete successfuly",
