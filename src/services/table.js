@@ -3,12 +3,6 @@ import TableTypeRepository from "../repositories/tableType";
 
 export default class TableService {
 	static async create(data) {
-		if (!data || typeof data !== "object" || Array.isArray(data)) {
-			throw Object.assign(new Error("Request body must be an object"), {
-				status: 400,
-			});
-		}
-
 		const allowedFields = ["tableNumber", "seats", "tableTypeId"];
 		const invalidFields = Object.keys(data).some(
 			(field) => !allowedFields.includes(field),
@@ -69,8 +63,8 @@ export default class TableService {
 		});
 
 		if (existingTableNumber) {
-			return resp.status(409).json({
-				message: "This table number is already exists",
+			throw Object.assign(new Error("This table number already exists"), {
+				status: 409,
 			});
 		}
 
@@ -80,12 +74,12 @@ export default class TableService {
 			tableTypeId,
 		});
 
-		resp.status(201).json({
+		return {
 			id: table.id,
 			tableNumber: table.tableNumber,
 			seats: table.seats,
 			tableTypeId: table.tableTypeId,
-		});
+		};
 	}
 
 	static async getAll(limit, page) {
@@ -138,12 +132,6 @@ export default class TableService {
 	}
 
 	static async update(id, data) {
-		if (!data || typeof data !== "object" || Array.isArray(data)) {
-			throw Object.assign(new Error("Request body must be an object"), {
-				status: 400,
-			});
-		}
-
 		if (
 			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
 				id,

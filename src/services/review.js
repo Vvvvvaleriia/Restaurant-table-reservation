@@ -3,12 +3,6 @@ import UserRepository from "../repositories/user";
 
 export default class ReviewService {
 	static async create(data) {
-		if (!data || typeof data !== "object" || Array.isArray(data)) {
-			throw Object.assign(new Error("Request body must be an object"), {
-				status: 400,
-			});
-		}
-
 		const allowedFields = ["userId", "rating", "comment"];
 		const invalidFields = Object.keys(req.body).some(
 			(field) => !allowedFields.includes(field),
@@ -120,12 +114,6 @@ export default class ReviewService {
 	}
 
 	static async update(id, data) {
-		if (!data || typeof data !== "object" || Array.isArray(data)) {
-			throw Object.assign(new Error("Request body must be an object"), {
-				status: 400,
-			});
-		}
-
 		if (
 			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
 				id,

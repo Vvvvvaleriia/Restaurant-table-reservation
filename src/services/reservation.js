@@ -4,12 +4,6 @@ import UserRepository from "../repositories/user";
 
 export default class ReservationService {
 	static async create(data) {
-		if (!data || typeof data !== "object" || Array.isArray(data)) {
-			throw Object.assign(new Error("Request body must be an object"), {
-				status: 400,
-			});
-		}
-
 		const allowedFields = [
 			"reservationDatetime",
 			"guests",
@@ -183,12 +177,6 @@ export default class ReservationService {
 			)
 		) {
 			throw Object.assign(new Error("Invalid reservation ID"), {
-				status: 400,
-			});
-		}
-
-		if (!data || typeof data !== "object" || Array.isArray(data)) {
-			throw Object.assign(new Error("Request body must be an object"), {
 				status: 400,
 			});
 		}

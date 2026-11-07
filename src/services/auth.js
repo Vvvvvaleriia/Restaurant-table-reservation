@@ -8,12 +8,6 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
 export default class AuthService {
 	static async register(body) {
-		if (!body || typeof body !== "object" || Array.isArray(body)) {
-			throw Object.assign(new Error("Invalid request body"), {
-				status: 400,
-			});
-		}
-
 		const allowedFields = ["name", "email", "phone", "password"];
 		const invalidFields = Object.keys(req.body).some(
 			(field) => !allowedFields.includes(field),
@@ -105,12 +99,6 @@ export default class AuthService {
 	}
 
 	static async login(body) {
-		if (!body || typeof body !== "object" || Array.isArray(body)) {
-			throw Object.assign(new Error("Invalid request body"), {
-				status: 400,
-			});
-		}
-
 		const { email, password } = body;
 
 		if (
@@ -160,12 +148,6 @@ export default class AuthService {
 	}
 
 	static async refresh(body) {
-		if (!body || typeof body !== "object" || Array.isArray(body)) {
-			throw Object.assign(new Error("Invalid request body"), {
-				status: 400,
-			});
-		}
-
 		const { refreshToken } = body;
 
 		if (typeof refreshToken !== "string" || !refreshToken) {
@@ -213,12 +195,6 @@ export default class AuthService {
 	}
 
 	static async logout(body) {
-		if (!body || typeof body !== "object" || Array.isArray(body)) {
-			throw Object.assign(new Error("Invalid request body"), {
-				status: 400,
-			});
-		}
-
 		const { refreshToken } = body;
 
 		if (typeof refreshToken !== "string" || !refreshToken) {

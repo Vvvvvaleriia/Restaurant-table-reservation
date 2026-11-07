@@ -2,12 +2,6 @@ import TableTypeRepository from "../repositories/tableType.js";
 
 export default class TableTypeService {
 	static async create(data) {
-		if (!data || typeof data !== "object" || Array.isArray(data)) {
-			throw Object.assign(new Error("Request body must be an object"), {
-				status: 400,
-			});
-		}
-
 		const allowedFields = ["name", "description", "markup"];
 		const invalidFields = Object.keys(req.body).some(
 			(field) => !allowedFields.includes(field),
@@ -130,12 +124,6 @@ export default class TableTypeService {
 			)
 		) {
 			throw Object.assign(new Error("Invalid table type ID"), {
-				status: 400,
-			});
-		}
-
-		if (!data || typeof data !== "object" || Array.isArray(data)) {
-			throw Object.assign(new Error("Request body must be an object"), {
 				status: 400,
 			});
 		}
