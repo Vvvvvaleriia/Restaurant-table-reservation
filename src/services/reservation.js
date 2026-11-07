@@ -21,7 +21,7 @@ export default class ReservationService {
 			});
 		}
 
-		const { reservationDatetime, guests, status, userId, tableId } = data;
+		const { reservationDatetime, guests, status, tableId } = data;
 
 		if (
 			reservationDatetime === undefined ||
@@ -74,12 +74,6 @@ export default class ReservationService {
 
 		const uuidRegex =
 			/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-		if (typeof userId !== "string" || !uuidRegex.test(userId)) {
-			throw Object.assign(new Error("Invalid user ID"), {
-				status: 400,
-			});
-		}
 
 		if (typeof tableId !== "string" || !uuidRegex.test(tableId)) {
 			throw Object.assign(new Error("Invalid table ID"), {
@@ -147,16 +141,6 @@ export default class ReservationService {
 	}
 
 	static async getById(id) {
-		if (
-			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-				id,
-			)
-		) {
-			throw Object.assign(new Error("Invalid reservation ID"), {
-				status: 400,
-			});
-		}
-
 		const reservation = await ReservationRepository.findById(id);
 
 		if (!reservation) {
@@ -169,16 +153,6 @@ export default class ReservationService {
 	}
 
 	static async update(userId, id, data) {
-		if (
-			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-				id,
-			)
-		) {
-			throw Object.assign(new Error("Invalid reservation ID"), {
-				status: 400,
-			});
-		}
-
 		const allowedFields = ["reservationDatetime", "guests", "tableId"];
 
 		const fields = Object.keys(data);
@@ -280,16 +254,6 @@ export default class ReservationService {
 	}
 
 	static async delete(userId, id) {
-		if (
-			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-				id,
-			)
-		) {
-			throw Object.assign(new Error("Invalid reservation ID"), {
-				status: 400,
-			});
-		}
-
 		const reservation = await ReservationRepository.findById(id);
 
 		if (!reservation) {

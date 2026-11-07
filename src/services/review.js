@@ -121,16 +121,6 @@ export default class ReviewService {
 	}
 
 	static async getById(id) {
-		if (
-			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-				id,
-			)
-		) {
-			throw Object.assign(new Error("Invalid review ID"), {
-				status: 400,
-			});
-		}
-
 		const review = await ReviewRepository.findById(id);
 
 		if (!review) {
@@ -143,16 +133,6 @@ export default class ReviewService {
 	}
 
 	static async update(userId, id, data) {
-		if (
-			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-				id,
-			)
-		) {
-			throw Object.assign(new Error("Invalid review ID"), {
-				status: 400,
-			});
-		}
-
 		const allowedFields = ["rating", "comment"];
 		const fields = Object.keys(data);
 
@@ -212,16 +192,6 @@ export default class ReviewService {
 	}
 
 	static async delete(userId, id) {
-		if (
-			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-				id,
-			)
-		) {
-			throw Object.assign(new Error("Invalid review ID"), {
-				status: 400,
-			});
-		}
-
 		const review = await ReviewRepository.findById(id);
 
 		if (!review) {

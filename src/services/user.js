@@ -29,16 +29,6 @@ export default class UserService {
 	}
 
 	static async getById(id) {
-		if (
-			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-				id,
-			)
-		) {
-			throw Object.assign(new Error("Invalid user ID"), {
-				status: 400,
-			});
-		}
-
 		const user = await UserRepository.findById(id);
 
 		if (!user) {
@@ -51,16 +41,6 @@ export default class UserService {
 	}
 
 	static async update(id, data) {
-		if (
-			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-				id,
-			)
-		) {
-			throw Object.assign(new Error("Invalid user ID"), {
-				status: 400,
-			});
-		}
-
 		const { name, email, phone } = data;
 
 		const allowedFields = ["name", "email", "phone"];
@@ -145,16 +125,6 @@ export default class UserService {
 	}
 
 	static async delete(id) {
-		if (
-			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-				id,
-			)
-		) {
-			throw Object.assign(new Error("Invalid user ID"), {
-				status: 400,
-			});
-		}
-
 		const user = await UserRepository.findById(id);
 
 		if (!user) {
