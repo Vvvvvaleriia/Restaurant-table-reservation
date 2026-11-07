@@ -3,11 +3,13 @@ import TableTypeController from "../services/tableType.js";
 import authMiddleware from "../middleware/checkToken.js";
 import validateBodyMiddleware from "../middleware/validateBody.js";
 import chechUuidMiddleware from "../middleware/checkUUID.js";
+import adminMiddleware from "../middleware/adminMiddleware.js";
 
 export const router = Router();
 
 router.post(
 	"/",
+	adminMiddleware,
 	authMiddleware,
 	validateBodyMiddleware,
 	TableTypeController.create,
@@ -16,6 +18,7 @@ router.get("/", TableTypeController.getAll);
 router.get("/:id", chechUuidMiddleware, TableTypeController.getById);
 router.put(
 	"/:id",
+	adminMiddleware,
 	validateBodyMiddleware,
 	authMiddleware,
 	chechUuidMiddleware,
@@ -23,6 +26,7 @@ router.put(
 ); //admin
 router.delete(
 	"/:id",
+	adminMiddleware,
 	authMiddleware,
 	chechUuidMiddleware,
 	TableTypeController.delete,

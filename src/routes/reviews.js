@@ -2,6 +2,7 @@ import { Router } from "express";
 import authMiddleware from "../middleware/checkToken.js";
 import validateBodyMiddleware from "../middleware/validateBody.js";
 import chechUuidMiddleware from "../middleware/checkUUID.js";
+import adminMiddleware from "../middleware/adminMiddleware.js";
 
 export const router = Router();
 
@@ -22,6 +23,7 @@ router.put(
 ); //user, але своє
 router.delete(
 	"/:id",
+	adminMiddleware,
 	authMiddleware,
 	chechUuidMiddleware,
 	ReviewController.delete,
