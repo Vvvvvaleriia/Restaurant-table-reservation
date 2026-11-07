@@ -75,11 +75,11 @@ export default class AuthService {
 			});
 		}
 
-		// if (password.length < 8 || password.length > 72) {
-		// 	return resp.status(400).json({
-		// 		message: "Password must be between 8 and 72 characters",
-		// 	});
-		// }
+		if (password.length < 8 || password.length > 72) {
+			return resp.status(400).json({
+				message: "Password must be between 8 and 72 characters",
+			});
+		}
 
 		const passwordHash = await bcrypt.hash(password, 10);
 
@@ -123,7 +123,7 @@ export default class AuthService {
 		}
 
 		const accessToken = jwt.sign(
-			{ id: user.id, email: user.email },
+			{ id: user.id, email: user.email, role: user.role },
 			JWT_ACCESS_SECRET,
 			{ expiresIn: "15m" },
 		);
@@ -173,9 +173,13 @@ export default class AuthService {
 			});
 		}
 
-		const accessToken = jwt.sign({ id: user.id }, JWT_ACCESS_SECRET, {
-			expiresIn: "15m",
-		});
+		const accessToken = jwt.sign(
+			{ id: user.id, role: user.role },
+			JWT_ACCESS_SECRET,
+			{
+				expiresIn: "15m",
+			},
+		);
 
 		const newRefreshToken = jwt.sign({ id: user.id }, JWT_REFRESH_SECRET, {
 			expiresIn: "7d",

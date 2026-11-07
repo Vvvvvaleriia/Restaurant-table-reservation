@@ -21,7 +21,7 @@ export default class AuthRepository {
 
 	static async findProfile(id) {
 		return await User.findByPk(id, {
-			attributes: ["id", "email", "name", "createdAt"],
+			attributes: ["id", "email", "name", "phone", "role", "createdAt"],
 		});
 	}
 
