@@ -11,7 +11,7 @@ router.post(
 	authMiddleware,
 	validateBodyMiddleware,
 	TableTypeController.create,
-);
+); //admin
 router.get("/", TableTypeController.getAll);
 router.get("/:id", chechUuidMiddleware, TableTypeController.getById);
 router.put(
@@ -20,10 +20,10 @@ router.put(
 	authMiddleware,
 	chechUuidMiddleware,
 	TableTypeController.update,
-);
+); //admin
 router.delete(
 	"/:id",
 	authMiddleware,
 	chechUuidMiddleware,
 	TableTypeController.delete,
-);
+); //admin

@@ -6,18 +6,18 @@ import chechUuidMiddleware from "../middleware/checkUUID.js";
 
 export const router = Router();
 
-router.get("/", UserController.getAll);
-router.get("/:id", chechUuidMiddleware, UserController.getById);
+router.get("/", UserController.getAll); //admin
+router.get("/:id", chechUuidMiddleware, UserController.getById); //admin and user (своє)
 router.put(
 	"/:id",
 	authMiddleware,
 	validateBodyMiddleware,
 	chechUuidMiddleware,
 	UserController.update,
-); //кожен зареєстрований користувач
+); //перевіряти, щоб змінював лише власний
 router.delete(
 	"/:id",
 	authMiddleware,
 	chechUuidMiddleware,
 	UserController.delete,
-);
+); //admin and user

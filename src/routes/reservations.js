@@ -10,24 +10,24 @@ router.post(
 	authMiddleware,
 	validateBodyMiddleware,
 	ReservationController.create,
-);
-router.get("/", ReservationController.getAll);
+); //user
+router.get("/", ReservationController.getAll); //admin
 router.get(
 	"/:id",
 	authMiddleware,
 	chechUuidMiddleware,
 	ReservationController.getById,
-);
+); //admin and user
 router.put(
 	"/:id",
 	authMiddleware,
 	validateBodyMiddleware,
 	chechUuidMiddleware,
 	ReservationController.update,
-);
+); //admin and user (своє)
 router.delete(
 	"/:id",
 	authMiddleware,
 	chechUuidMiddleware,
 	ReservationController.delete,
-);
+); //admin and user

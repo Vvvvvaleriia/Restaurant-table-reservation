@@ -10,7 +10,7 @@ router.post(
 	authMiddleware,
 	validateBodyMiddleware,
 	TableController.create,
-);
+); //admiin
 router.get("/", TableController.getAll);
 router.get("/:id", chechUuidMiddleware, TableController.getById);
 router.put(
@@ -19,10 +19,10 @@ router.put(
 	validateBodyMiddleware,
 	chechUuidMiddleware,
 	TableController.update,
-);
+); //admiin
 router.delete(
 	"/:id",
 	authMiddleware,
 	chechUuidMiddleware,
 	TableController.delete,
-);
+); //admiin
