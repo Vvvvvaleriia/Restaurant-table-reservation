@@ -8,25 +8,25 @@ export const router = Router();
 
 router.post(
 	"/",
-	adminMiddleware,
 	authMiddleware,
+	adminMiddleware,
 	validateBodyMiddleware,
 	TableController.create,
-); //admiin
+);
 router.get("/", TableController.getAll);
 router.get("/:id", chechUuidMiddleware, TableController.getById);
 router.put(
 	"/:id",
-	adminMiddleware,
 	authMiddleware,
+	adminMiddleware,
 	validateBodyMiddleware,
 	chechUuidMiddleware,
 	TableController.update,
-); //admiin
+);
 router.delete(
 	"/:id",
-	adminMiddleware,
 	authMiddleware,
+	adminMiddleware,
 	chechUuidMiddleware,
 	TableController.delete,
-); //admiin
+);

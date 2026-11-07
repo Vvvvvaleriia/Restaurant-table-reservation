@@ -23,9 +23,11 @@ export default class UserController {
 
 	static async getById(req, resp) {
 		try {
-			const { id } = req.params;
-
-			const user = UserService.getById(id);
+			const user = UserService.getById(
+				req.user.id,
+				req.user.role,
+				req.params.id,
+			);
 
 			return resp.status(200).json(user);
 		} catch (error) {
@@ -43,9 +45,12 @@ export default class UserController {
 
 	static async update(req, resp) {
 		try {
-			const { id } = req.params;
-
-			const user = UserService.update(id, req.body);
+			const user = UserService.update(
+				req.user.id,
+				req.user.role,
+				req.params.id,
+				req.body,
+			);
 
 			return resp.status(200).json(user);
 		} catch (error) {
@@ -63,9 +68,7 @@ export default class UserController {
 
 	static async delete(req, resp) {
 		try {
-			const { id } = req.params;
-
-			await UserService.delete(id);
+			await UserService.delete(req.user.id, req.user.role, req.params.id);
 
 			return resp.status(200).json({
 				message: "User delete successfuly",

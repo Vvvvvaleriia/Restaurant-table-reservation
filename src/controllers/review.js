@@ -61,10 +61,9 @@ export default class ReviewController {
 
 	static async update(req, resp) {
 		try {
-			const { id } = req.params;
-
 			const review = ReviewService.update(
 				req.user.id,
+				req.user.role,
 				req.params.id,
 				req.body,
 			);
@@ -85,9 +84,11 @@ export default class ReviewController {
 
 	static async delete(req, resp) {
 		try {
-			const { id } = req.params;
-
-			await ReviewService.delete(req.user.id, req.params.id);
+			await ReviewService.delete(
+				req.user.id,
+				req.user.role,
+				req.params.id,
+			);
 
 			return resp.status(200).json({
 				message: "Review delete successfuly",

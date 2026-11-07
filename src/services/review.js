@@ -132,7 +132,7 @@ export default class ReviewService {
 		return review;
 	}
 
-	static async update(userId, id, data) {
+	static async update(userId, role, id, data) {
 		const allowedFields = ["rating", "comment"];
 		const fields = Object.keys(data);
 
@@ -153,8 +153,8 @@ export default class ReviewService {
 			});
 		}
 
-		if (review.userId !== userId) {
-			throw Object.assign(new Error("This is not your review"), {
+		if (review.userId !== userId && role !== "admin") {
+			throw Object.assign(new Error("Access denied"), {
 				status: 403,
 			});
 		}
@@ -191,7 +191,7 @@ export default class ReviewService {
 		return review;
 	}
 
-	static async delete(userId, id) {
+	static async delete(userId, role, id) {
 		const review = await ReviewRepository.findById(id);
 
 		if (!review) {
@@ -200,8 +200,8 @@ export default class ReviewService {
 			});
 		}
 
-		if (review.userId !== userId) {
-			throw Object.assign(new Error("This is not your review"), {
+		if (review.userId !== userId && role !== "admin") {
+			throw Object.assign(new Error("Access denied"), {
 				status: 403,
 			});
 		}

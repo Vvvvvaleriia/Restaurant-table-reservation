@@ -28,7 +28,7 @@ export default class UserService {
 		});
 	}
 
-	static async getById(id) {
+	static async getById(userId, role, id) {
 		const user = await UserRepository.findById(id);
 
 		if (!user) {
@@ -37,10 +37,16 @@ export default class UserService {
 			});
 		}
 
+		if (user.id !== userId && role !== "admin") {
+			throw Object.assign(new Error("Access denied"), {
+				status: 403,
+			});
+		}
+
 		return user;
 	}
 
-	static async update(id, data) {
+	static async update(userId, role, id, data) {
 		const { name, email, phone } = data;
 
 		const allowedFields = ["name", "email", "phone"];
@@ -60,6 +66,12 @@ export default class UserService {
 		if (!user) {
 			throw Object.assign(new Error("User not found"), {
 				status: 404,
+			});
+		}
+
+		if (user.id !== userId && role !== "admin") {
+			throw Object.assign(new Error("Access denied"), {
+				status: 403,
 			});
 		}
 
@@ -124,12 +136,18 @@ export default class UserService {
 		};
 	}
 
-	static async delete(id) {
+	static async delete(userId, role, id) {
 		const user = await UserRepository.findById(id);
 
 		if (!user) {
 			throw Object.assign(new Error("User not found"), {
 				status: 404,
+			});
+		}
+
+		if (user.id !== userId && role !== "admin") {
+			throw Object.assign(new Error("Access denied"), {
+				status: 403,
 			});
 		}
 

@@ -41,9 +41,11 @@ export default class ReservationController {
 
 	static async getById(req, resp) {
 		try {
-			const { id } = req.params;
-
-			const reservation = await ReservationService.getById(id);
+			const reservation = await ReservationService.getById(
+				req.user.id,
+				req.user.role,
+				req.params.id,
+			);
 
 			return resp.status(201).json(reservation);
 		} catch (error) {
@@ -61,10 +63,9 @@ export default class ReservationController {
 
 	static async update(req, resp) {
 		try {
-			const { id } = req.params;
-
 			const reservation = ReservationService.update(
 				req.user.id,
+				req.user.role,
 				req.params.id,
 				req.body,
 			);
@@ -85,7 +86,11 @@ export default class ReservationController {
 
 	static async delete(req, resp) {
 		try {
-			await ReviewService.delete(req.user.id, req.params.id);
+			await ReviewService.delete(
+				req.user.id,
+				req.user.role,
+				req.params.id,
+			);
 
 			return resp.status(200).json({
 				message: "Reservation delete successfuly",

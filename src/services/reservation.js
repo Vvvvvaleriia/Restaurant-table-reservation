@@ -140,7 +140,7 @@ export default class ReservationService {
 		});
 	}
 
-	static async getById(id) {
+	static async getById(userId, role, id) {
 		const reservation = await ReservationRepository.findById(id);
 
 		if (!reservation) {
@@ -149,10 +149,16 @@ export default class ReservationService {
 			});
 		}
 
+		if (reservation.userId !== userId && role !== "admin") {
+			throw Object.assign(new Error("Access denied"), {
+				status: 403,
+			});
+		}
+
 		return reservation;
 	}
 
-	static async update(userId, id, data) {
+	static async update(userId, role, id, data) {
 		const allowedFields = ["reservationDatetime", "guests", "tableId"];
 
 		const fields = Object.keys(data);
@@ -174,8 +180,8 @@ export default class ReservationService {
 			});
 		}
 
-		if (reservation.userId !== userId) {
-			throw Object.assign(new Error("This is not your reservation"), {
+		if (reservation.userId !== userId && role !== "admin") {
+			throw Object.assign(new Error("Access denied"), {
 				status: 403,
 			});
 		}
@@ -253,7 +259,7 @@ export default class ReservationService {
 		});
 	}
 
-	static async delete(userId, id) {
+	static async delete(userId, role, id) {
 		const reservation = await ReservationRepository.findById(id);
 
 		if (!reservation) {
@@ -262,8 +268,8 @@ export default class ReservationService {
 			});
 		}
 
-		if (reservation.userId !== userId) {
-			throw Object.assign(new Error("This is not your reservation"), {
+		if (reservation.userId !== userId && role !== "admin") {
+			throw Object.assign(new Error("Access denied"), {
 				status: 403,
 			});
 		}

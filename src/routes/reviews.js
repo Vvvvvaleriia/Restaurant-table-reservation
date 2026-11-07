@@ -20,11 +20,10 @@ router.put(
 	validateBodyMiddleware,
 	chechUuidMiddleware,
 	ReviewController.update,
-); //user, але своє
+);
 router.delete(
 	"/:id",
-	adminMiddleware,
 	authMiddleware,
 	chechUuidMiddleware,
 	ReviewController.delete,
-); //admin and user
+);
