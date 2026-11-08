@@ -7,7 +7,7 @@ export default class ReviewRepository {
 	}
 
 	static async findAll(limit, offset) {
-		return await Review.findAll({
+		return await Review.findAndCountAll({
 			limit: limit,
 			offset: offset,
 			order: [["createdAt", "DESC"]],

@@ -114,10 +114,20 @@ export default class ReviewService {
 
 		const offset = (parsedPage - 1) * parsedLimit;
 
-		return await ReviewRepository.findAll({
+		const { count, rows } = await ReviewRepository.findAll({
 			limit: parsedLimit,
 			offset,
 		});
+
+		return {
+			data: rows,
+			pagination: {
+				totalItems: count,
+				tatalPages: Math.ceil(count / parsedLimit),
+				currentPage: parsedPage,
+				limit: parsedLimit,
+			},
+		};
 	}
 
 	static async getById(id) {

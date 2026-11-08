@@ -22,10 +22,20 @@ export default class UserService {
 
 		const offset = (parsedPage - 1) * parsedLimit;
 
-		return await UserRepository.findAll({
+		const { count, rows } = await UserRepository.findAll({
 			limit: parsedLimit,
 			offset,
 		});
+
+		return {
+			data: rows,
+			pagination: {
+				totalItems: count,
+				totalPages: Math.ceil(count / parsedLimit),
+				currentPage: parsedPage,
+				limit: parsedLimit,
+			},
+		};
 	}
 
 	static async getById(userId, role, id) {

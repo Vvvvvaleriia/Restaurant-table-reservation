@@ -6,7 +6,7 @@ export default class ReservationRepository {
 	}
 
 	static async findAll(limit, offset) {
-		return await Reservation.findAll({
+		return await Reservation.findAndCountAll({
 			limit: limit,
 			offset: offset,
 			order: [["createdAt", "DESC"]],

@@ -89,10 +89,20 @@ export default class TableTypeService {
 
 		const offset = (parsedPage - 1) * parsedLimit;
 
-		return await TableTypeRepository.findAll({
+		const { count, rows } = await TableTypeRepository.findAll({
 			limit: parsedLimit,
 			offset,
 		});
+
+		return {
+			data: rows,
+			pagination: {
+				totalItems: count,
+				tatalPages: Math.ceil(count / parsedLimit),
+				currentPage: parsedPage,
+				limit: parsedLimit,
+			},
+		};
 	}
 
 	static async getById(id) {

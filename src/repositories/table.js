@@ -6,7 +6,7 @@ export default class TableRepository {
 	}
 
 	static async findAll(limit, offset) {
-		return await Table.findAll({
+		return await Table.findAndCountAll({
 			limit: limit,
 			offset: offset,
 			order: [["createdAt", "DESC"]],

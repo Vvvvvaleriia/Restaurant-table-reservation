@@ -2,7 +2,7 @@ import { User } from "../models.js";
 
 export default class UserRepository {
 	static async findAll(limit, offset) {
-		return await User.findAll({
+		return await User.findAndCountAll({
 			limit: limit,
 			offset: offset,
 			order: [["createdAt", "DESC"]],
