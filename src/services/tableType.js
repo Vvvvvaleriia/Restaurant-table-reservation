@@ -50,9 +50,7 @@ export default class TableTypeService {
 			});
 		}
 
-		const existingType = await TableTypeRepository.findByName({
-			name: name.trim(),
-		});
+		const existingType = await TableTypeRepository.findByName(name.trim());
 
 		if (existingType) {
 			throw Object.assign(
@@ -69,6 +67,8 @@ export default class TableTypeService {
 	}
 
 	static async getAll(limit, page) {
+		console.log("PAGINATION:", { limit, page });
+
 		const parsedLimit = Number(limit);
 		const parsedPage = Number(page);
 
@@ -98,7 +98,7 @@ export default class TableTypeService {
 			data: rows,
 			pagination: {
 				totalItems: count,
-				tatalPages: Math.ceil(count / parsedLimit),
+				totalPages: Math.ceil(count / parsedLimit),
 				currentPage: parsedPage,
 				limit: parsedLimit,
 			},
@@ -162,7 +162,7 @@ export default class TableTypeService {
 			});
 		}
 
-		const tableType = await TableTypeRepository.findByPk(id);
+		const tableType = await TableTypeRepository.findById(id);
 
 		if (!tableType) {
 			throw Object.assign(new Error("Table type not found"), {
@@ -171,9 +171,9 @@ export default class TableTypeService {
 		}
 
 		if (name !== undefined) {
-			const existingType = await TableTypeRepository.findByName({
-				name: name.trim(),
-			});
+			const existingType = await TableTypeRepository.findByName(
+				name.trim(),
+			);
 
 			if (existingType && existingType.id !== tableType.id) {
 				throw Object.assign(
@@ -183,13 +183,13 @@ export default class TableTypeService {
 			}
 		}
 
-		await TableTypeRepository.update(
+		await TableTypeRepository.update(tableType, {
 			...(name !== undefined && { name: name.trim() }),
 			...(description !== undefined && {
 				description: description?.trim() || null,
 			}),
 			...(markup !== undefined && { markup }),
-		);
+		});
 
 		return tableType;
 	}

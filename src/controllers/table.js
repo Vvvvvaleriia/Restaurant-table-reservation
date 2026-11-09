@@ -18,11 +18,12 @@ export default class TableController {
 			});
 		}
 	}
+
 	static async getAll(req, resp) {
 		try {
 			const { limit = 10, page = "1" } = req.query;
 
-			const tables = TableService.getAll(limit, page);
+			const tables = await TableService.getAll(limit, page);
 
 			return resp.status(200).json(tables);
 		} catch (error) {
@@ -62,7 +63,7 @@ export default class TableController {
 		try {
 			const { id } = req.params;
 
-			const table = TableService.update(id, req.body);
+			const table = await TableService.update(id, req.body);
 
 			return resp.status(200).json(table);
 		} catch (error) {

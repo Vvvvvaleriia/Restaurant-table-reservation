@@ -1,4 +1,4 @@
-import { User } from "../models.js";
+import { User } from "../models/user.js";
 
 export default class AuthRepository {
 	static async findByEmail(email) {
@@ -12,7 +12,7 @@ export default class AuthRepository {
 	}
 
 	static async findByRefreshToken(refreshToken) {
-		return await User.FindOne({
+		return await User.findOne({
 			where: {
 				refreshToken,
 			},

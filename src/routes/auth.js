@@ -3,7 +3,7 @@ import AuthController from "../controllers/auth.js";
 import authMiddleware from "../middleware/checkToken.js";
 import validateBodyMiddleware from "../middleware/validateBody.js";
 
-const router = Router();
+export const router = Router();
 
 router.post("/register", validateBodyMiddleware, AuthController.register);
 router.post("/login", validateBodyMiddleware, AuthController.login);

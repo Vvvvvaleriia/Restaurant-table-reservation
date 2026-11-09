@@ -7,6 +7,7 @@ export default class TableTypeController {
 
 			return resp.status(201).json(tableType);
 		} catch (error) {
+			console.error(error);
 			if (error.status) {
 				return resp.status(error.status).json({
 					message: error.message,
@@ -23,7 +24,7 @@ export default class TableTypeController {
 		try {
 			const { limit = 3, page = "1" } = req.query;
 
-			const tableTypes = TableTypeService.getAll(limit, page);
+			const tableTypes = await TableTypeService.getAll(limit, page);
 
 			return resp.status(200).json(tableTypes);
 		} catch (error) {
@@ -43,7 +44,7 @@ export default class TableTypeController {
 		try {
 			const { id } = req.params;
 
-			const tableType = TableTypeService.getById(id);
+			const tableType = await TableTypeService.getById(id);
 
 			return resp.status(200).json(tableType);
 		} catch (error) {
@@ -60,14 +61,16 @@ export default class TableTypeController {
 	}
 
 	static async update(req, resp) {
+		console.log("UPDATE TABLE TYPE CALLED");
 		try {
 			const { id } = req.params;
 
-			const tableType = TableTypeService.update(id, req.body);
+			const tableType = await TableTypeService.update(id, req.body);
 
 			return resp.status(200).json(tableType);
 		} catch (error) {
 			if (error.status) {
+				console.error(error);
 				return resp.status(error.status).json({
 					message: error.message,
 				});

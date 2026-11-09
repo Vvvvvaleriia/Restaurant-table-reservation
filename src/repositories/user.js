@@ -1,13 +1,13 @@
-import { User } from "../models.js";
+import { User } from "../models/user.js";
 
 export default class UserRepository {
-	static async findAll(limit, offset) {
+	static async findAll({ limit, offset }) {
 		return await User.findAndCountAll({
-			limit: limit,
-			offset: offset,
+			limit,
+			offset,
 			order: [["createdAt", "DESC"]],
 			attributes: {
-				exclude: ["passwordHash"],
+				exclude: ["passwordHash", "refreshToken"],
 			},
 		});
 	}

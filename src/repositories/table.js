@@ -1,11 +1,11 @@
-import { Table } from "../models.js";
+import { Table } from "../models/table.js";
 
 export default class TableRepository {
 	static async create(data) {
 		return await Table.create(data);
 	}
 
-	static async findAll(limit, offset) {
+	static async findAll({ limit, offset }) {
 		return await Table.findAndCountAll({
 			limit: limit,
 			offset: offset,

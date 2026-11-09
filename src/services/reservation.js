@@ -1,15 +1,10 @@
 import ReservationRepository from "../repositories/reservation.js";
-import TableRepository from "../repositories/table";
-import UserRepository from "../repositories/user";
+import TableRepository from "../repositories/table.js";
+import UserRepository from "../repositories/user.js";
 
 export default class ReservationService {
 	static async create(userId, data) {
-		const allowedFields = [
-			"reservationDatetime",
-			"guests",
-			"status",
-			"tableId",
-		];
+		const allowedFields = ["reservationDatetime", "guests", "tableId"];
 
 		const invalidFields = Object.keys(data).some(
 			(field) => !allowedFields.includes(field),
@@ -21,7 +16,7 @@ export default class ReservationService {
 			});
 		}
 
-		const { reservationDatetime, guests, status, tableId } = data;
+		const { reservationDatetime, guests, tableId } = data;
 
 		if (
 			reservationDatetime === undefined ||
@@ -63,15 +58,6 @@ export default class ReservationService {
 			);
 		}
 
-		if (
-			status !== undefined &&
-			!["active", "cancelled", "completed"].includes(status)
-		) {
-			throw Object.assign(new Error("Invalid reservation status"), {
-				status: 400,
-			});
-		}
-
 		const uuidRegex =
 			/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -107,7 +93,6 @@ export default class ReservationService {
 		return await ReservationRepository.create({
 			reservationDatetime: reservationDate,
 			guests,
-			...(status !== undefined && { status }),
 			userId,
 			tableId,
 		});
@@ -143,7 +128,7 @@ export default class ReservationService {
 			data: rows,
 			pagination: {
 				totalItems: count,
-				tatalPages: Math.ceil(count / parsedLimit),
+				totalPages: Math.ceil(count / parsedLimit),
 				currentPage: parsedPage,
 				limit: parsedLimit,
 			},

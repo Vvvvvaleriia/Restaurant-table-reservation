@@ -1,5 +1,5 @@
 import { Router } from "express";
-import TableTypeController from "../services/tableType.js";
+import TableTypeController from "../controllers/tableType.js";
 import authMiddleware from "../middleware/checkToken.js";
 import validateBodyMiddleware from "../middleware/validateBody.js";
 import chechUuidMiddleware from "../middleware/checkUUID.js";

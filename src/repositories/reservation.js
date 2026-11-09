@@ -1,11 +1,11 @@
-import { Reservation } from "../models.js";
+import { Reservation } from "../models/reservation.js";
 
 export default class ReservationRepository {
 	static async create(data) {
 		return await Reservation.create(data);
 	}
 
-	static async findAll(limit, offset) {
+	static async findAll({ limit, offset }) {
 		return await Reservation.findAndCountAll({
 			limit: limit,
 			offset: offset,

@@ -1,5 +1,4 @@
 import ReviewRepository from "../repositories/review.js";
-import UserRepository from "../repositories/user";
 
 export default class ReviewService {
 	static async create(userId, data) {
@@ -123,7 +122,7 @@ export default class ReviewService {
 			data: rows,
 			pagination: {
 				totalItems: count,
-				tatalPages: Math.ceil(count / parsedLimit),
+				totalPages: Math.ceil(count / parsedLimit),
 				currentPage: parsedPage,
 				limit: parsedLimit,
 			},

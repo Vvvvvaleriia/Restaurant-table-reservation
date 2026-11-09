@@ -1,12 +1,11 @@
-import { Review } from "../models.js";
-import { Reservation } from "../models/reservation.js";
+import { Review } from "../models/review.js";
 
 export default class ReviewRepository {
 	static async create(data) {
 		return await Review.create(data);
 	}
 
-	static async findAll(limit, offset) {
+	static async findAll({ limit, offset }) {
 		return await Review.findAndCountAll({
 			limit: limit,
 			offset: offset,

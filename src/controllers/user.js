@@ -1,14 +1,15 @@
 import UserService from "../services/user.js";
 
 export default class UserController {
-	static async getAll() {
+	static async getAll(req, resp) {
 		try {
 			const { limit = 10, page = "1" } = req.query;
 
-			const users = UserService.getAll(limit, page);
+			const users = await UserService.getAll(limit, page);
 
 			return resp.status(200).json(users);
 		} catch (error) {
+			console.error(error);
 			if (error.status) {
 				return resp.status(error.status).json({
 					message: error.message,
@@ -23,7 +24,7 @@ export default class UserController {
 
 	static async getById(req, resp) {
 		try {
-			const user = UserService.getById(
+			const user = await UserService.getById(
 				req.user.id,
 				req.user.role,
 				req.params.id,
@@ -45,7 +46,7 @@ export default class UserController {
 
 	static async update(req, resp) {
 		try {
-			const user = UserService.update(
+			const user = await UserService.update(
 				req.user.id,
 				req.user.role,
 				req.params.id,

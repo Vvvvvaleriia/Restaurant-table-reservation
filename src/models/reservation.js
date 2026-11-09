@@ -15,7 +15,7 @@ export const Reservation = sequelize.define(
 			allowNull: false,
 			validate: {
 				isDate: true,
-				isAfter: new Date().toISOString,
+				isAfter: new Date().toISOString(),
 			},
 		},
 		guests: {

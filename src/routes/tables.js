@@ -1,4 +1,5 @@
 import { Router } from "express";
+import TableController from "../controllers/table.js";
 import authMiddleware from "../middleware/checkToken.js";
 import validateBodyMiddleware from "../middleware/validateBody.js";
 import chechUuidMiddleware from "../middleware/checkUUID.js";

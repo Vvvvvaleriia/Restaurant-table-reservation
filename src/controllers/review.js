@@ -23,7 +23,7 @@ export default class ReviewController {
 		try {
 			const { limit = 10, page = "1" } = req.query;
 
-			const reviews = ReviewService.getAll(limit, page);
+			const reviews = await ReviewService.getAll(limit, page);
 
 			return resp.status(200).json(reviews);
 		} catch (error) {
@@ -45,7 +45,7 @@ export default class ReviewController {
 
 			const review = await ReviewService.getById(id);
 
-			return resp.status(201).json(review);
+			return resp.status(200).json(review);
 		} catch (error) {
 			if (error.status) {
 				return resp.status(error.status).json({
@@ -61,7 +61,7 @@ export default class ReviewController {
 
 	static async update(req, resp) {
 		try {
-			const review = ReviewService.update(
+			const review = await ReviewService.update(
 				req.user.id,
 				req.user.role,
 				req.params.id,
@@ -91,7 +91,7 @@ export default class ReviewController {
 			);
 
 			return resp.status(200).json({
-				message: "Review delete successfuly",
+				message: "Review deleted successfuly",
 			});
 		} catch (error) {
 			if (error.status) {

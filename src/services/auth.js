@@ -65,9 +65,7 @@ export default class AuthService {
 			});
 		}
 
-		const existingUser = await UserRepository.findByEmail({
-			normalizedEmail,
-		});
+		const existingUser = await UserRepository.findByEmail(normalizedEmail);
 
 		if (existingUser) {
 			throw Object.assign(new Error("Email already exists"), {
@@ -76,9 +74,10 @@ export default class AuthService {
 		}
 
 		if (password.length < 8 || password.length > 72) {
-			return resp.status(400).json({
-				message: "Password must be between 8 and 72 characters",
-			});
+			throw Object.assign(
+				new Error("Password must be between 8 and 72 characters"),
+				{ status: 400 },
+			);
 		}
 
 		const passwordHash = await bcrypt.hash(password, 10);
@@ -114,7 +113,7 @@ export default class AuthService {
 
 		const normalizedEmail = email.trim().toLowerCase();
 
-		const user = await UserRepository.findByEmail({ normalizedEmail });
+		const user = await UserRepository.findByEmail(normalizedEmail);
 
 		if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
 			throw Object.assign(new Error("Invalid email or password"), {

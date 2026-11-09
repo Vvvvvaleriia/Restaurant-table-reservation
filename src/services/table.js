@@ -1,5 +1,5 @@
 import TableRepository from "../repositories/table.js";
-import TableTypeRepository from "../repositories/tableType";
+import TableTypeRepository from "../repositories/tableType.js";
 
 export default class TableService {
 	static async create(data) {
@@ -58,9 +58,8 @@ export default class TableService {
 			});
 		}
 
-		const existingTableNumber = await TableRepository.findByNumber({
-			tableNumber,
-		});
+		const existingTableNumber =
+			await TableRepository.findByNumber(tableNumber);
 
 		if (existingTableNumber) {
 			throw Object.assign(new Error("This table number already exists"), {
@@ -103,7 +102,7 @@ export default class TableService {
 
 		const offset = (parsedPage - 1) * parsedLimit;
 
-		const { count, rows } = TableRepository.findAll({
+		const { count, rows } = await TableRepository.findAll({
 			limit: parsedLimit,
 			offset,
 		});
@@ -112,7 +111,7 @@ export default class TableService {
 			data: rows,
 			pagination: {
 				totalItems: count,
-				tatalPages: Math.ceil(count / parsedLimit),
+				totalPages: Math.ceil(count / parsedLimit),
 				currentPage: parsedPage,
 				limit: parsedLimit,
 			},
@@ -193,9 +192,8 @@ export default class TableService {
 		}
 
 		if (tableNumber !== undefined) {
-			const existingTable = await TableRepository.findByNumber({
-				tableNumber,
-			});
+			const existingTable =
+				await TableRepository.findByNumber(tableNumber);
 
 			if (existingTable && existingTable.id !== table.id) {
 				throw Object.assign(
