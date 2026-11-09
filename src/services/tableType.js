@@ -1,4 +1,5 @@
 import TableTypeRepository from "../repositories/tableType.js";
+import { StatusCodes } from "http-status-codes";
 
 export default class TableTypeService {
 	static async create(data) {
@@ -9,7 +10,7 @@ export default class TableTypeService {
 
 		if (invalidFields) {
 			throw Object.assign(new Error("Request contains invalid fields"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -17,13 +18,13 @@ export default class TableTypeService {
 
 		if (name === undefined || markup === undefined) {
 			throw Object.assign(new Error("Name and markup are required"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
 		if (typeof name !== "string" || !name.trim()) {
 			throw Object.assign(new Error("Name must be a non-empty string"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -35,7 +36,7 @@ export default class TableTypeService {
 			throw Object.assign(
 				new Error("Markup must be a non-negative number"),
 				{
-					status: 400,
+					status: StatusCodes.BAD_REQUEST,
 				},
 			);
 		}
@@ -46,7 +47,7 @@ export default class TableTypeService {
 			(typeof description !== "string" || !description.trim())
 		) {
 			throw Object.assign(new Error("Description must be a string"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -55,7 +56,7 @@ export default class TableTypeService {
 		if (existingType) {
 			throw Object.assign(
 				new Error("Table type with this name already exists"),
-				{ status: 409 },
+				{ status: StatusCodes.CONFLICT },
 			);
 		}
 
@@ -81,7 +82,7 @@ export default class TableTypeService {
 				new Error(
 					"Limit must be 1-100 and page must be a positive integer",
 				),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
@@ -108,7 +109,7 @@ export default class TableTypeService {
 
 		if (!tableType) {
 			throw Object.assign(new Error("Table type not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
@@ -124,7 +125,7 @@ export default class TableTypeService {
 			fields.some((field) => !allowedFields.includes(field))
 		) {
 			throw Object.assign(new Error("Invalid or empty request body"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -132,7 +133,7 @@ export default class TableTypeService {
 
 		if (name !== undefined && (typeof name !== "string" || !name.trim())) {
 			throw Object.assign(new Error("Name must be a non-empty string"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -145,7 +146,7 @@ export default class TableTypeService {
 			throw Object.assign(
 				new Error("Markup must be a non-negative number"),
 				{
-					status: 400,
+					status: StatusCodes.BAD_REQUEST,
 				},
 			);
 		}
@@ -156,7 +157,7 @@ export default class TableTypeService {
 			(typeof description !== "string" || !description.trim())
 		) {
 			throw Object.assign(new Error("Description must be a string"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -164,7 +165,7 @@ export default class TableTypeService {
 
 		if (!tableType) {
 			throw Object.assign(new Error("Table type not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
@@ -176,7 +177,7 @@ export default class TableTypeService {
 			if (existingType && existingType.id !== tableType.id) {
 				throw Object.assign(
 					new Error("Table type with this name already exists"),
-					{ status: 409 },
+					{ status: StatusCodes.CONFLICT },
 				);
 			}
 		}
@@ -197,7 +198,7 @@ export default class TableTypeService {
 
 		if (!tableType) {
 			throw Object.assign(new Error("Table type not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 

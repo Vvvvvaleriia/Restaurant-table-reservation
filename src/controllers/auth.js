@@ -1,21 +1,24 @@
 import AuthService from "../services/auth.js";
+import { StatusCodes } from "http-status-codes";
 
 export default class AuthController {
 	static async register(req, resp) {
 		try {
 			const user = await AuthService.register(req.body);
 
-			return resp.status(201).json(user);
+			return resp.status(StatusCodes.CREATED).json(user);
 		} catch (error) {
 			if (error.name === "SequelizeUniqueConstraintError") {
-				return resp.status(409).json({
+				return resp.status(StatusCodes.CONFLICT).json({
 					error: "Email already exists",
 				});
 			}
 
-			return resp.status(error.status || 500).json({
-				error: error.message,
-			});
+			return resp
+				.status(error.status || StatusCodes.INTERNAL_SERVER_ERROR)
+				.json({
+					error: error.message,
+				});
 		}
 	}
 
@@ -23,11 +26,13 @@ export default class AuthController {
 		try {
 			const tokens = await AuthService.login(req.body);
 
-			return resp.status(200).json(tokens);
+			return resp.status(StatusCodes.OK).json(tokens);
 		} catch (error) {
-			return resp.status(error.status || 500).json({
-				error: error.message,
-			});
+			return resp
+				.status(error.status || StatusCodes.INTERNAL_SERVER_ERROR)
+				.json({
+					error: error.message,
+				});
 		}
 	}
 
@@ -35,11 +40,13 @@ export default class AuthController {
 		try {
 			const user = await AuthService.profile(req.user.id);
 
-			return resp.status(200).json(user);
+			return resp.status(StatusCodes.OK).json(user);
 		} catch (error) {
-			return resp.status(error.status || 500).json({
-				error: error.message,
-			});
+			return resp
+				.status(error.status || StatusCodes.INTERNAL_SERVER_ERROR)
+				.json({
+					error: error.message,
+				});
 		}
 	}
 
@@ -47,11 +54,13 @@ export default class AuthController {
 		try {
 			const tokens = await AuthService.refresh(req.body);
 
-			return resp.status(200).json(tokens);
+			return resp.status(StatusCodes.OK).json(tokens);
 		} catch (error) {
-			return resp.status(error.status || 500).json({
-				error: error.message,
-			});
+			return resp
+				.status(error.status || StatusCodes.INTERNAL_SERVER_ERROR)
+				.json({
+					error: error.message,
+				});
 		}
 	}
 
@@ -59,11 +68,13 @@ export default class AuthController {
 		try {
 			const result = await AuthService.logout(req.body);
 
-			return resp.status(200).json(result);
+			return resp.status(StatusCodes.OK).json(result);
 		} catch (error) {
-			return resp.status(error.status || 500).json({
-				error: error.message,
-			});
+			return resp
+				.status(error.status || StatusCodes.INTERNAL_SERVER_ERROR)
+				.json({
+					error: error.message,
+				});
 		}
 	}
 }

@@ -1,4 +1,5 @@
 import UserRepository from "../repositories/user.js";
+import { StatusCodes } from "http-status-codes";
 
 export default class UserService {
 	static async getAll(limit, page) {
@@ -16,7 +17,7 @@ export default class UserService {
 				new Error(
 					"Limit must be 1-100 and page must be a positive integer",
 				),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
@@ -43,13 +44,13 @@ export default class UserService {
 
 		if (!user) {
 			throw Object.assign(new Error("User not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
 		if (user.id !== userId && role !== "admin") {
 			throw Object.assign(new Error("Access denied"), {
-				status: 403,
+				status: StatusCodes.FORBIDDEN,
 			});
 		}
 
@@ -67,7 +68,7 @@ export default class UserService {
 			fields.some((field) => !allowedFields.includes(field))
 		) {
 			throw Object.assign(new Error("Invalid or empty request body"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -75,20 +76,20 @@ export default class UserService {
 
 		if (!user) {
 			throw Object.assign(new Error("User not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
 		if (user.id !== userId && role !== "admin") {
 			throw Object.assign(new Error("Access denied"), {
-				status: 403,
+				status: StatusCodes.FORBIDDEN,
 			});
 		}
 
 		if (name !== undefined) {
 			if (typeof name !== "string" || !name.trim()) {
 				throw Object.assign(new Error("Invalid name"), {
-					status: 400,
+					status: StatusCodes.BAD_REQUEST,
 				});
 			}
 		}
@@ -97,7 +98,7 @@ export default class UserService {
 		if (email !== undefined) {
 			if (typeof email !== "string") {
 				throw Object.assign(new Error("Invalid email"), {
-					status: 400,
+					status: StatusCodes.BAD_REQUEST,
 				});
 			}
 
@@ -105,7 +106,7 @@ export default class UserService {
 
 			if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
 				throw Object.assign(new Error("Invalid email"), {
-					status: 400,
+					status: StatusCodes.BAD_REQUEST,
 				});
 			}
 		}
@@ -116,7 +117,7 @@ export default class UserService {
 
 			if (existingUser && existingUser.id !== user.id) {
 				throw Object.assign(new Error("Email already exists"), {
-					status: 409,
+					status: StatusCodes.CONFLICT,
 				});
 			}
 		}
@@ -127,7 +128,7 @@ export default class UserService {
 				!/^\+?[0-9]{10,15}$/.test(phone.trim())
 			) {
 				throw Object.assign(new Error("Invalid phone number"), {
-					status: 400,
+					status: StatusCodes.BAD_REQUEST,
 				});
 			}
 		}
@@ -151,13 +152,13 @@ export default class UserService {
 
 		if (!user) {
 			throw Object.assign(new Error("User not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
 		if (user.id !== userId && role !== "admin") {
 			throw Object.assign(new Error("Access denied"), {
-				status: 403,
+				status: StatusCodes.FORBIDDEN,
 			});
 		}
 

@@ -1,11 +1,12 @@
 import TableTypeService from "../services/tableType.js";
+import { StatusCodes } from "http-status-codes";
 
 export default class TableTypeController {
 	static async create(req, resp) {
 		try {
 			const tableType = await TableTypeService.create(req.body);
 
-			return resp.status(201).json(tableType);
+			return resp.status(StatusCodes.CREATED).json(tableType);
 		} catch (error) {
 			console.error(error);
 			if (error.status) {
@@ -14,7 +15,7 @@ export default class TableTypeController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -26,7 +27,7 @@ export default class TableTypeController {
 
 			const tableTypes = await TableTypeService.getAll(limit, page);
 
-			return resp.status(200).json(tableTypes);
+			return resp.status(StatusCodes.OK).json(tableTypes);
 		} catch (error) {
 			if (error.status) {
 				return resp.status(error.status).json({
@@ -34,7 +35,7 @@ export default class TableTypeController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -46,7 +47,7 @@ export default class TableTypeController {
 
 			const tableType = await TableTypeService.getById(id);
 
-			return resp.status(200).json(tableType);
+			return resp.status(StatusCodes.OK).json(tableType);
 		} catch (error) {
 			if (error.status) {
 				return resp.status(error.status).json({
@@ -54,7 +55,7 @@ export default class TableTypeController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -67,7 +68,7 @@ export default class TableTypeController {
 
 			const tableType = await TableTypeService.update(id, req.body);
 
-			return resp.status(200).json(tableType);
+			return resp.status(StatusCodes.OK).json(tableType);
 		} catch (error) {
 			if (error.status) {
 				console.error(error);
@@ -76,7 +77,7 @@ export default class TableTypeController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -88,7 +89,7 @@ export default class TableTypeController {
 
 			await TableTypeService.delete(id);
 
-			return resp.status(200).json({
+			return resp.status(StatusCodes.OK).json({
 				message: "Table type delete successfuly",
 			});
 		} catch (error) {
@@ -98,7 +99,7 @@ export default class TableTypeController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}

@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import AuthRepository from "../repositories/auth.js";
 import UserRepository from "../repositories/user.js";
+import { StatusCodes } from "http-status-codes";
 
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
@@ -15,7 +16,7 @@ export default class AuthService {
 
 		if (invalidFields) {
 			throw Object.assign(new Error("Unexpected fields"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -23,7 +24,7 @@ export default class AuthService {
 
 		if (!name || !email || !phone || !password) {
 			throw Object.assign(new Error("All fields are required"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -34,7 +35,7 @@ export default class AuthService {
 			typeof password !== "string"
 		) {
 			throw Object.assign(new Error("Invalid field types"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -49,19 +50,19 @@ export default class AuthService {
 			!password.trim()
 		) {
 			throw Object.assign(new Error("Fields cannot be empty"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
 		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
 			throw Object.assign(new Error("Invalid email"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
 		if (!/^\+?[0-9]{10,15}$/.test(normalizedPhone)) {
 			throw Object.assign(new Error("Invalid phone number"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -69,14 +70,14 @@ export default class AuthService {
 
 		if (existingUser) {
 			throw Object.assign(new Error("Email already exists"), {
-				status: 409,
+				status: StatusCodes.CONFLICT,
 			});
 		}
 
 		if (password.length < 8 || password.length > 72) {
 			throw Object.assign(
 				new Error("Password must be between 8 and 72 characters"),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
@@ -107,7 +108,7 @@ export default class AuthService {
 			!password
 		) {
 			throw Object.assign(new Error("Email and password are required"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -117,7 +118,7 @@ export default class AuthService {
 
 		if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
 			throw Object.assign(new Error("Invalid email or password"), {
-				status: 401,
+				status: StatusCodes.UNAUTHORIZED,
 			});
 		}
 
@@ -140,7 +141,7 @@ export default class AuthService {
 
 		if (!user) {
 			throw Object.assign(new Error("User not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 		return user;
@@ -151,7 +152,7 @@ export default class AuthService {
 
 		if (typeof refreshToken !== "string" || !refreshToken) {
 			throw Object.assign(new Error("Refresh token is required"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -160,7 +161,7 @@ export default class AuthService {
 			payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
 		} catch {
 			throw Object.assign(new Error("Invalid or expired refresh token"), {
-				status: 401,
+				status: StatusCodes.UNAUTHORIZED,
 			});
 		}
 
@@ -168,7 +169,7 @@ export default class AuthService {
 
 		if (!user || user.refreshToken !== refreshToken) {
 			throw Object.assign(new Error("Invalid refresh token"), {
-				status: 401,
+				status: StatusCodes.UNAUTHORIZED,
 			});
 		}
 
@@ -197,7 +198,7 @@ export default class AuthService {
 
 		if (typeof refreshToken !== "string" || !refreshToken) {
 			throw Object.assign(new Error("Refresh token is required"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 

@@ -1,4 +1,5 @@
 import ReservationService from "../services/reservation.js";
+import { StatusCodes } from "http-status-codes";
 
 export default class ReservationController {
 	static async create(req, resp) {
@@ -8,16 +9,15 @@ export default class ReservationController {
 				req.body,
 			);
 
-			return resp.status(201).json(reservation);
+			return resp.status(StatusCodes.CREATED).json(reservation);
 		} catch (error) {
-			console.error("Reservation create error:", error);
 			if (error.status) {
 				return resp.status(error.status).json({
 					message: error.message,
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -29,7 +29,7 @@ export default class ReservationController {
 
 			const reservations = await ReservationService.getAll(limit, page);
 
-			return resp.status(200).json(reservations);
+			return resp.status(StatusCodes.OK).json(reservations);
 		} catch (error) {
 			if (error.status) {
 				return resp.status(error.status).json({
@@ -37,7 +37,7 @@ export default class ReservationController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -51,7 +51,7 @@ export default class ReservationController {
 				req.params.id,
 			);
 
-			return resp.status(200).json(reservation);
+			return resp.status(StatusCodes.OK).json(reservation);
 		} catch (error) {
 			if (error.status) {
 				return resp.status(error.status).json({
@@ -59,7 +59,7 @@ export default class ReservationController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -74,7 +74,7 @@ export default class ReservationController {
 				req.body,
 			);
 
-			return resp.status(200).json(reservation);
+			return resp.status(StatusCodes.OK).json(reservation);
 		} catch (error) {
 			if (error.status) {
 				return resp.status(error.status).json({
@@ -82,7 +82,7 @@ export default class ReservationController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -96,7 +96,7 @@ export default class ReservationController {
 				req.params.id,
 			);
 
-			return resp.status(200).json({
+			return resp.status(StatusCodes.OK).json({
 				message: "Reservation deleted successfuly",
 			});
 		} catch (error) {
@@ -106,7 +106,7 @@ export default class ReservationController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}

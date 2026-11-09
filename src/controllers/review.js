@@ -1,11 +1,12 @@
 import ReviewService from "../services/review.js";
+import { StatusCodes } from "http-status-codes";
 
 export default class ReviewController {
 	static async create(req, resp) {
 		try {
 			const review = await ReviewService.create(req.user.id, req.body);
 
-			return resp.status(201).json(review);
+			return resp.status(StatusCodes.CREATED).json(review);
 		} catch (error) {
 			if (error.status) {
 				return resp.status(error.status).json({
@@ -13,7 +14,7 @@ export default class ReviewController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -25,7 +26,7 @@ export default class ReviewController {
 
 			const reviews = await ReviewService.getAll(limit, page);
 
-			return resp.status(200).json(reviews);
+			return resp.status(StatusCodes.OK).json(reviews);
 		} catch (error) {
 			if (error.status) {
 				return resp.status(error.status).json({
@@ -33,7 +34,7 @@ export default class ReviewController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -45,7 +46,7 @@ export default class ReviewController {
 
 			const review = await ReviewService.getById(id);
 
-			return resp.status(200).json(review);
+			return resp.status(StatusCodes.OK).json(review);
 		} catch (error) {
 			if (error.status) {
 				return resp.status(error.status).json({
@@ -53,7 +54,7 @@ export default class ReviewController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -68,7 +69,7 @@ export default class ReviewController {
 				req.body,
 			);
 
-			return resp.status(200).json(review);
+			return resp.status(StatusCodes.OK).json(review);
 		} catch (error) {
 			if (error.status) {
 				return resp.status(error.status).json({
@@ -76,7 +77,7 @@ export default class ReviewController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -90,7 +91,7 @@ export default class ReviewController {
 				req.params.id,
 			);
 
-			return resp.status(200).json({
+			return resp.status(StatusCodes.OK).json({
 				message: "Review deleted successfuly",
 			});
 		} catch (error) {
@@ -100,7 +101,7 @@ export default class ReviewController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}

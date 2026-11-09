@@ -1,4 +1,5 @@
 import UserService from "../services/user.js";
+import { StatusCodes } from "http-status-codes";
 
 export default class UserController {
 	static async getAll(req, resp) {
@@ -7,7 +8,7 @@ export default class UserController {
 
 			const users = await UserService.getAll(limit, page);
 
-			return resp.status(200).json(users);
+			return resp.status(StatusCodes.OK).json(users);
 		} catch (error) {
 			console.error(error);
 			if (error.status) {
@@ -16,7 +17,7 @@ export default class UserController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -30,7 +31,7 @@ export default class UserController {
 				req.params.id,
 			);
 
-			return resp.status(200).json(user);
+			return resp.status(StatusCodes.OK).json(user);
 		} catch (error) {
 			if (error.status) {
 				return resp.status(error.status).json({
@@ -38,7 +39,7 @@ export default class UserController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -53,7 +54,7 @@ export default class UserController {
 				req.body,
 			);
 
-			return resp.status(200).json(user);
+			return resp.status(StatusCodes.OK).json(user);
 		} catch (error) {
 			if (error.status) {
 				return resp.status(error.status).json({
@@ -61,7 +62,7 @@ export default class UserController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}
@@ -71,7 +72,7 @@ export default class UserController {
 		try {
 			await UserService.delete(req.user.id, req.user.role, req.params.id);
 
-			return resp.status(200).json({
+			return resp.status(StatusCodes.OK).json({
 				message: "User delete successfuly",
 			});
 		} catch (error) {
@@ -81,7 +82,7 @@ export default class UserController {
 				});
 			}
 
-			return resp.status(500).json({
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
 				message: "Internal server error",
 			});
 		}

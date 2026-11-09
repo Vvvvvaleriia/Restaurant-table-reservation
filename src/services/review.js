@@ -1,4 +1,5 @@
 import ReviewRepository from "../repositories/review.js";
+import { StatusCodes } from "http-status-codes";
 
 export default class ReviewService {
 	static async create(userId, data) {
@@ -9,7 +10,7 @@ export default class ReviewService {
 
 		if (invalidFields) {
 			throw Object.assign(new Error("Request contains invalid fields"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -19,7 +20,7 @@ export default class ReviewService {
 			throw Object.assign(
 				new Error("reservation ID and rating are required"),
 				{
-					status: 400,
+					status: StatusCodes.BAD_REQUEST,
 				},
 			);
 		}
@@ -30,14 +31,14 @@ export default class ReviewService {
 			)
 		) {
 			throw Object.assign(new Error("Invalid reservation ID"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
 		if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
 			throw Object.assign(
 				new Error("Rating must be an integer between 1 and 5"),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
@@ -47,7 +48,7 @@ export default class ReviewService {
 			(typeof comment !== "string" || !comment.trim())
 		) {
 			throw Object.assign(new Error("Comment must be a string"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -55,13 +56,13 @@ export default class ReviewService {
 
 		if (!reservation) {
 			throw Object.assign(new Error("Reservation not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
 		if (reservation.userId !== userId) {
 			throw Object.assign(new Error("This is not your reservation"), {
-				status: 403,
+				status: StatusCodes.FORBIDDEN,
 			});
 		}
 
@@ -70,7 +71,7 @@ export default class ReviewService {
 				new Error(
 					"Review can only be created for completed reservations",
 				),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
@@ -80,7 +81,7 @@ export default class ReviewService {
 		if (existingReview) {
 			throw Object.assign(
 				new Error("Review for this reservation already exists"),
-				{ status: 409 },
+				{ status: StatusCodes.CONFLICT },
 			);
 		}
 
@@ -107,7 +108,7 @@ export default class ReviewService {
 				new Error(
 					"Limit must be 1-100 and page must be a positive integer",
 				),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
@@ -134,7 +135,7 @@ export default class ReviewService {
 
 		if (!review) {
 			throw Object.assign(new Error("Review not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
@@ -150,7 +151,7 @@ export default class ReviewService {
 			fields.some((field) => !allowedFields.includes(field))
 		) {
 			throw Object.assign(new Error("Invalid or empty request body"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -158,13 +159,13 @@ export default class ReviewService {
 
 		if (!review) {
 			throw Object.assign(new Error("Review not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
 		if (review.userId !== userId && role !== "admin") {
 			throw Object.assign(new Error("Access denied"), {
-				status: 403,
+				status: StatusCodes.FORBIDDEN,
 			});
 		}
 
@@ -176,7 +177,7 @@ export default class ReviewService {
 		) {
 			throw Object.assign(
 				new Error("Rating must be an integer between 1 and 5"),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
@@ -186,7 +187,7 @@ export default class ReviewService {
 			(typeof comment !== "string" || !comment.trim())
 		) {
 			throw Object.assign(new Error("Comment must be a string"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -205,13 +206,13 @@ export default class ReviewService {
 
 		if (!review) {
 			throw Object.assign(new Error("Review not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
 		if (review.userId !== userId && role !== "admin") {
 			throw Object.assign(new Error("Access denied"), {
-				status: 403,
+				status: StatusCodes.FORBIDDEN,
 			});
 		}
 

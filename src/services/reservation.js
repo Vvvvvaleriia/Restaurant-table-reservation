@@ -1,6 +1,7 @@
 import ReservationRepository from "../repositories/reservation.js";
 import TableRepository from "../repositories/table.js";
 import UserRepository from "../repositories/user.js";
+import { StatusCodes } from "http-status-codes";
 
 export default class ReservationService {
 	static async create(userId, data) {
@@ -12,7 +13,7 @@ export default class ReservationService {
 
 		if (invalidFields) {
 			throw Object.assign(new Error("Request contains invalid fields"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -27,7 +28,7 @@ export default class ReservationService {
 				new Error(
 					"Reservation datetime, guests and table ID are required",
 				),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
@@ -40,21 +41,21 @@ export default class ReservationService {
 		) {
 			throw Object.assign(
 				new Error("Invalid reservation date and time"),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
 		if (reservationDate <= new Date()) {
 			throw Object.assign(
 				new Error("Reservation date and time must be in the future"),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
 		if (!Number.isInteger(guests) || guests < 1) {
 			throw Object.assign(
 				new Error("Guests must be a positive integer"),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
@@ -63,7 +64,7 @@ export default class ReservationService {
 
 		if (typeof tableId !== "string" || !uuidRegex.test(tableId)) {
 			throw Object.assign(new Error("Invalid table ID"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -71,7 +72,7 @@ export default class ReservationService {
 
 		if (!user) {
 			throw Object.assign(new Error("User not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
@@ -79,14 +80,14 @@ export default class ReservationService {
 
 		if (!table) {
 			throw Object.assign(new Error("Table not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
 		if (guests > table.seats) {
 			throw Object.assign(
 				new Error("Number of guests exceeds table capacity"),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
@@ -113,7 +114,7 @@ export default class ReservationService {
 				new Error(
 					"Limit must be 1-100 and page must be a positive integer",
 				),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
@@ -140,13 +141,13 @@ export default class ReservationService {
 
 		if (!reservation) {
 			throw Object.assign(new Error("Reservation not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
 		if (reservation.userId !== userId && role !== "admin") {
 			throw Object.assign(new Error("Access denied"), {
-				status: 403,
+				status: StatusCodes.FORBIDDEN,
 			});
 		}
 
@@ -163,7 +164,7 @@ export default class ReservationService {
 			fields.some((field) => !allowedFields.includes(field))
 		) {
 			throw Object.assign(new Error("Invalid or empty request body"), {
-				status: 400,
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
@@ -171,13 +172,13 @@ export default class ReservationService {
 
 		if (!reservation) {
 			throw Object.assign(new Error("Reservation not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
 		if (reservation.userId !== userId && role !== "admin") {
 			throw Object.assign(new Error("Access denied"), {
-				status: 403,
+				status: StatusCodes.FORBIDDEN,
 			});
 		}
 
@@ -194,7 +195,7 @@ export default class ReservationService {
 			) {
 				throw Object.assign(
 					new Error("Invalid reservation date and time"),
-					{ status: 400 },
+					{ status: StatusCodes.BAD_REQUEST },
 				);
 			}
 
@@ -203,7 +204,7 @@ export default class ReservationService {
 					new Error(
 						"Reservation date and time must be in the future",
 					),
-					{ status: 400 },
+					{ status: StatusCodes.BAD_REQUEST },
 				);
 			}
 		}
@@ -211,7 +212,7 @@ export default class ReservationService {
 		if (guests !== undefined && (!Number.isInteger(guests) || guests < 1)) {
 			throw Object.assign(
 				new Error("Guests must be a positive integer"),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
@@ -221,7 +222,7 @@ export default class ReservationService {
 		if (tableId !== undefined) {
 			if (typeof tableId !== "string" || !uuidRegex.test(tableId)) {
 				throw Object.assign(new Error("Invalid table ID"), {
-					status: 400,
+					status: StatusCodes.BAD_REQUEST,
 				});
 			}
 		}
@@ -232,7 +233,7 @@ export default class ReservationService {
 
 		if (!targetTable) {
 			throw Object.assign(new Error("Table not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
@@ -241,7 +242,7 @@ export default class ReservationService {
 		if (targetGuests > targetTable.seats) {
 			throw Object.assign(
 				new Error("Number of guests exceeds table capacity"),
-				{ status: 400 },
+				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}
 
@@ -259,13 +260,13 @@ export default class ReservationService {
 
 		if (!reservation) {
 			throw Object.assign(new Error("Reservation not found"), {
-				status: 404,
+				status: StatusCodes.NOT_FOUND,
 			});
 		}
 
 		if (reservation.userId !== userId && role !== "admin") {
 			throw Object.assign(new Error("Access denied"), {
-				status: 403,
+				status: StatusCodes.FORBIDDEN,
 			});
 		}
 
