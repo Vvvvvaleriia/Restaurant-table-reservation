@@ -67,8 +67,6 @@ export default class TableTypeService {
 	}
 
 	static async getAll(limit, page) {
-		console.log("PAGINATION:", { limit, page });
-
 		const parsedLimit = Number(limit);
 		const parsedPage = Number(page);
 

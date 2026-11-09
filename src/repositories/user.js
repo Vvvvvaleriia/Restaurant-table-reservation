@@ -15,7 +15,7 @@ export default class UserRepository {
 	static async findById(id) {
 		return await User.findByPk(id, {
 			attributes: {
-				exclude: ["passwordHash"],
+				exclude: ["passwordHash", "refreshToken"],
 			},
 		});
 	}

@@ -15,7 +15,7 @@ router.post(
 	TableTypeController.create,
 );
 router.get("/", TableTypeController.getAll);
-router.get("/:id", chechUuidMiddleware, TableTypeController.getById);
+router.get("/:id", chechUuidMiddleware, TableTypeController.getById); // можуть дивитися всі
 router.put(
 	"/:id",
 	authMiddleware,
