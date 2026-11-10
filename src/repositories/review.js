@@ -1,4 +1,5 @@
 import { Review } from "../models/review.js";
+import { User } from "../models/user.js";
 
 export default class ReviewRepository {
 	static async create(data) {
@@ -10,11 +11,24 @@ export default class ReviewRepository {
 			limit: limit,
 			offset: offset,
 			order: [["createdAt", "DESC"]],
+			include: [
+				{
+					model: User,
+					attributes: ["name"],
+				},
+			],
 		});
 	}
 
 	static async findById(id) {
-		return await Review.findByPk(id);
+		return await Review.findByPk(id, {
+			include: [
+				{
+					model: User,
+					attributes: ["name"],
+				},
+			],
+		});
 	}
 
 	static async findByReservationId(reservationId) {

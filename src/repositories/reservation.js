@@ -1,4 +1,7 @@
 import { Reservation } from "../models/reservation.js";
+import { Table } from "../models/table.js";
+import { TableType } from "../models/tableType.js";
+import { User } from "../models/user.js";
 
 export default class ReservationRepository {
 	static async create(data) {
@@ -10,11 +13,44 @@ export default class ReservationRepository {
 			limit: limit,
 			offset: offset,
 			order: [["createdAt", "DESC"]],
+			include: [
+				{
+					model: User,
+					attributes: ["name", "email"],
+				},
+				{
+					model: Table,
+					attributes: ["tableNumber", "seats"],
+					include: [
+						{
+							model: TableType,
+							attributes: ["name", "description", "markup"],
+						},
+					],
+				},
+			],
 		});
 	}
 
 	static async findById(id) {
-		return await Reservation.findByPk(id);
+		return await Reservation.findByPk(id, {
+			include: [
+				{
+					model: User,
+					attributes: ["name", "email"],
+				},
+				{
+					model: Table,
+					attributes: ["tableNumber", "seats"],
+					include: [
+						{
+							model: TableType,
+							attributes: ["name", "description", "markup"],
+						},
+					],
+				},
+			],
+		});
 	}
 
 	static async update(reservation, data) {

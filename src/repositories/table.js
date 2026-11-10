@@ -1,4 +1,5 @@
 import { Table } from "../models/table.js";
+import { TableType } from "../models/tableType.js";
 
 export default class TableRepository {
 	static async create(data) {
@@ -10,11 +11,24 @@ export default class TableRepository {
 			limit: limit,
 			offset: offset,
 			order: [["createdAt", "DESC"]],
+			include: [
+				{
+					model: TableType,
+					attributes: ["name", "description", "markup"],
+				},
+			],
 		});
 	}
 
 	static async findById(id) {
-		return await Table.findByPk(id);
+		return await Table.findByPk(id, {
+			include: [
+				{
+					model: TableType,
+					attributes: ["name", "description", "markup"],
+				},
+			],
+		});
 	}
 
 	static async findByNumber(tableNumber) {
