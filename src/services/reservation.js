@@ -91,6 +91,18 @@ export default class ReservationService {
 			);
 		}
 
+		const reservedTable = await ReservationRepository.findTimeConflict(
+			tableId,
+			reservationDatetime,
+		);
+
+		if (reservedTable) {
+			throw Object.assign(
+				new Error("This table has active reservation for this time"),
+				{ status: StatusCodes.BAD_REQUEST },
+			);
+		}
+
 		return await ReservationRepository.create({
 			reservationDatetime: reservationDate,
 			guests,
@@ -154,8 +166,13 @@ export default class ReservationService {
 		return reservation;
 	}
 
-	static async update(userId, role, id, data) {
-		const allowedFields = ["reservationDatetime", "guests", "tableId"];
+	static async update(id, data) {
+		const allowedFields = [
+			"reservationDatetime",
+			"guests",
+			"tableId",
+			"status",
+		];
 
 		const fields = Object.keys(data);
 
@@ -176,13 +193,26 @@ export default class ReservationService {
 			});
 		}
 
-		if (reservation.userId !== userId && role !== "admin") {
-			throw Object.assign(new Error("Access denied"), {
-				status: StatusCodes.FORBIDDEN,
+		if (reservation.reservationDatetime <= new Date()) {
+			throw Object.assign(new Error("Reservation can`t be updated"), {
+				status: StatusCodes.BAD_REQUEST,
 			});
 		}
 
-		const { reservationDatetime, guests, tableId } = data;
+		const { reservationDatetime, guests, tableId, status } = data;
+
+		if (
+			status !== undefined &&
+			(typeof status !== "string" ||
+				!["active", "cancelled", "completed"].includes(status))
+		) {
+			throw Object.assign(
+				new Error(
+					"Status must be string with meaning active, cancelled or completed",
+				),
+				{ status: StatusCodes.BAD_REQUEST },
+			);
+		}
 
 		let reservationDate = reservation.reservationDatetime;
 
@@ -246,12 +276,34 @@ export default class ReservationService {
 			);
 		}
 
+		const targetStatus = status !== undefined ? status : reservation.status;
+
+		if (
+			targetStatus === "active" &&
+			(reservationDatetime !== undefined ||
+				tableId !== undefined ||
+				reservation.status !== "active")
+		) {
+			const reservedTable = await ReservationRepository.findTimeConflict(
+				tableId !== undefined ? tableId : reservation.tableId,
+				reservationDate,
+				id,
+			);
+
+			if (reservedTable) {
+				throw Object.assign(new Error("This table can`t be reserved"), {
+					status: StatusCodes.CONFLICT,
+				});
+			}
+		}
+
 		return await ReservationRepository.update(reservation, {
 			...(reservationDatetime !== undefined && {
 				reservationDatetime: reservationDate,
 			}),
 			...(guests !== undefined && { guests }),
 			...(tableId !== undefined && { tableId }),
+			...(status !== undefined && { status }),
 		});
 	}
 

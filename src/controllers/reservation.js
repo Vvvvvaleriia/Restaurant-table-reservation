@@ -68,8 +68,6 @@ export default class ReservationController {
 	static async update(req, resp) {
 		try {
 			const reservation = await ReservationService.update(
-				req.user.id,
-				req.user.role,
 				req.params.id,
 				req.body,
 			);

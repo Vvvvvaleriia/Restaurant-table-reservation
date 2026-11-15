@@ -23,6 +23,7 @@ router.get(
 router.put(
 	"/:id",
 	authMiddleware,
+	adminMiddleware,
 	validateBodyMiddleware,
 	chechUuidMiddleware,
 	ReservationController.update,
