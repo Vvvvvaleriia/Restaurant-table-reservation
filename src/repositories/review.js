@@ -1,4 +1,12 @@
-import {Review, User} from "../models/index.js"
+import { Review, User } from "../models/index.js";
+
+const includeToReview = [
+	{
+		model: User,
+		as: "user",
+		attributes: ["name"],
+	},
+];
 
 export default class ReviewRepository {
 	static async create(data) {
@@ -10,23 +18,13 @@ export default class ReviewRepository {
 			limit: limit,
 			offset: offset,
 			order: [["createdAt", "DESC"]],
-			include: [
-				{
-					model: User,
-					attributes: ["name"],
-				},
-			],
+			include: includeToReview,
 		});
 	}
 
 	static async findById(id) {
 		return await Review.findByPk(id, {
-			include: [
-				{
-					model: User,
-					attributes: ["name"],
-				},
-			],
+			include: includeToReview,
 		});
 	}
 
