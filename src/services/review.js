@@ -1,4 +1,5 @@
 import ReviewRepository from "../repositories/review.js";
+import ReservationRepository from "../repositories/reservation.js";
 import { StatusCodes } from "http-status-codes";
 
 export default class ReviewService {

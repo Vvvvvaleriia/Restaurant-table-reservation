@@ -9,7 +9,7 @@
 		"start": "node src/index.js",
 		"migration:new": "cd db && sequelize-cli migration:generate",
 		"db:migrate": "cd db && sequelize-cli db:migrate",
-		"db:seed": "cd bd && sequelize-cli db:seed:all"
+		"db:seed": "cd db && sequelize-cli db:seed:all"
 	},
 	"keywords": [],
 	"author": "",

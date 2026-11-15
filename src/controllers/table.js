@@ -46,7 +46,7 @@ export default class TableController {
 
 			const table = await TableService.getById(id);
 
-			return resp.status(StatusCodes.CREATED).json(table);
+			return resp.status(StatusCodes.OK).json(table);
 		} catch (error) {
 			if (error.status) {
 				return resp.status(error.status).json({

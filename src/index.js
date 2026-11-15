@@ -1,4 +1,5 @@
 import "./config/index.js";
+import "./models/index.js";
 import express from "express";
 import { router as routerAuth } from "./routes/auth.js";
 import { router as routerUser } from "./routes/users.js";

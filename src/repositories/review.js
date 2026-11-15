@@ -1,5 +1,4 @@
-import { Review } from "../models/review.js";
-import { User } from "../models/user.js";
+import {Review, User} from "../models/index.js"
 
 export default class ReviewRepository {
 	static async create(data) {

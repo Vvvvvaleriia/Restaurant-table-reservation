@@ -1,4 +1,4 @@
-import { TableType } from "../models/tableType.js";
+import { TableType } from "../models/index.js";
 
 export default class TableTypeRepository {
 	static async create(data) {
