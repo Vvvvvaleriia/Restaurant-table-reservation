@@ -307,6 +307,43 @@ export default class ReservationService {
 		});
 	}
 
+	static async cancel(userId, role, id) {
+		const reservation = await ReservationRepository.findById(id);
+
+		if (!reservation) {
+			throw Object.assign(new Error("Reservation not found"), {
+				status: StatusCodes.NOT_FOUND,
+			});
+		}
+
+		if (reservation.userId !== userId && role !== "admin") {
+			throw Object.assign(new Error("Access denied"), {
+				status: StatusCodes.FORBIDDEN,
+			});
+		}
+
+		if (["cancelled", "completed"].includes(reservation.status)) {
+			throw Object.assign(new Error("Reservation can't be cancelled"), {
+				status: StatusCodes.FORBIDDEN,
+			});
+		}
+
+		if (role !== "admin") {
+			if (reservation.reservationDatetime <= new Date()) {
+				throw Object.assign(
+					new Error("Reservation has already started or passed"),
+					{
+						status: StatusCodes.BAD_REQUEST,
+					},
+				);
+			}
+		}
+
+		return await ReservationRepository.update(reservation, {
+			status: "cancelled",
+		});
+	}
+
 	static async delete(userId, role, id) {
 		const reservation = await ReservationRepository.findById(id);
 

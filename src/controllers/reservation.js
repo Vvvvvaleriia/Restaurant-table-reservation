@@ -86,6 +86,28 @@ export default class ReservationController {
 		}
 	}
 
+	static async cancel(req, resp) {
+		try {
+			const reservation = await ReservationService.cancel(
+				req.user.id,
+				req.user.role,
+				req.params.id,
+			);
+
+			return resp.status(StatusCodes.OK).json(reservation);
+		} catch (error) {
+			if (error.status) {
+				return resp.status(error.status).json({
+					message: error.message,
+				});
+			}
+
+			return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+				message: "Internal server error",
+			});
+		}
+	}
+
 	static async delete(req, resp) {
 		try {
 			await ReservationService.delete(

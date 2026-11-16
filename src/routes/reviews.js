@@ -1,7 +1,7 @@
 import { Router } from "express";
 import authMiddleware from "../middleware/checkToken.js";
 import validateBodyMiddleware from "../middleware/validateBody.js";
-import chechUuidMiddleware from "../middleware/checkUUID.js";
+import checkUuidMiddleware from "../middleware/checkUUID.js";
 import ReviewController from "../controllers/review.js";
 
 export const router = Router();
@@ -13,17 +13,17 @@ router.post(
 	ReviewController.create,
 );
 router.get("/", ReviewController.getAll);
-router.get("/:id", chechUuidMiddleware, ReviewController.getById);
+router.get("/:id", checkUuidMiddleware, ReviewController.getById);
 router.put(
 	"/:id",
 	authMiddleware,
 	validateBodyMiddleware,
-	chechUuidMiddleware,
+	checkUuidMiddleware,
 	ReviewController.update,
 );
 router.delete(
 	"/:id",
 	authMiddleware,
-	chechUuidMiddleware,
+	checkUuidMiddleware,
 	ReviewController.delete,
 );

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import authMiddleware from "../middleware/checkToken.js";
 import validateBodyMiddleware from "../middleware/validateBody.js";
-import chechUuidMiddleware from "../middleware/checkUUID.js";
+import checkUuidMiddleware from "../middleware/checkUUID.js";
 import adminMiddleware from "../middleware/adminMiddleware.js";
 import ReservationController from "../controllers/reservation.js";
 
@@ -14,10 +14,11 @@ router.post(
 	ReservationController.create,
 );
 router.get("/", authMiddleware, adminMiddleware, ReservationController.getAll);
+//router.get("/my")
 router.get(
 	"/:id",
 	authMiddleware,
-	chechUuidMiddleware,
+	checkUuidMiddleware,
 	ReservationController.getById,
 );
 router.put(
@@ -25,12 +26,19 @@ router.put(
 	authMiddleware,
 	adminMiddleware,
 	validateBodyMiddleware,
-	chechUuidMiddleware,
+	checkUuidMiddleware,
 	ReservationController.update,
+);
+router.patch(
+	"/:id/cancel",
+	authMiddleware,
+	validateBodyMiddleware,
+	checkUuidMiddleware,
+	ReservationController.cancel,
 );
 router.delete(
 	"/:id",
 	authMiddleware,
-	chechUuidMiddleware,
+	checkUuidMiddleware,
 	ReservationController.delete,
-);
+); // тільки для адміна

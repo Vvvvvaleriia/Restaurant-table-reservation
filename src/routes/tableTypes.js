@@ -2,7 +2,7 @@ import { Router } from "express";
 import TableTypeController from "../controllers/tableType.js";
 import authMiddleware from "../middleware/checkToken.js";
 import validateBodyMiddleware from "../middleware/validateBody.js";
-import chechUuidMiddleware from "../middleware/checkUUID.js";
+import checkUuidMiddleware from "../middleware/checkUUID.js";
 import adminMiddleware from "../middleware/adminMiddleware.js";
 
 export const router = Router();
@@ -15,19 +15,19 @@ router.post(
 	TableTypeController.create,
 );
 router.get("/", TableTypeController.getAll);
-router.get("/:id", chechUuidMiddleware, TableTypeController.getById); // можуть дивитися всі
+router.get("/:id", checkUuidMiddleware, TableTypeController.getById);
 router.put(
 	"/:id",
 	authMiddleware,
 	adminMiddleware,
 	validateBodyMiddleware,
-	chechUuidMiddleware,
+	checkUuidMiddleware,
 	TableTypeController.update,
 );
 router.delete(
 	"/:id",
 	authMiddleware,
 	adminMiddleware,
-	chechUuidMiddleware,
+	checkUuidMiddleware,
 	TableTypeController.delete,
 );
