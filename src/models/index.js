@@ -7,12 +7,12 @@ import { Table } from "./table.js";
 User.hasMany(Reservation, {
 	foreignKey: "userId",
 	as: "reservations",
-	onDelete: "CASCADE",
+	onDelete: "RESTRICT",
 });
 Reservation.belongsTo(User, {
 	foreignKey: "userId",
 	as: "user",
-	onDelete: "CASCADE",
+	onDelete: "RESTRICT",
 });
 
 User.hasMany(Review, {
@@ -29,23 +29,23 @@ Review.belongsTo(User, {
 TableType.hasMany(Table, {
 	foreignKey: "tableTypeId",
 	as: "tables",
-	onDelete: "CASCADE",
+	onDelete: "RESTRICT",
 });
 Table.belongsTo(TableType, {
 	foreignKey: "tableTypeId",
 	as: "tableType",
-	onDelete: "CASCADE",
+	onDelete: "RESTRICT",
 });
 
 Table.hasMany(Reservation, {
 	foreignKey: "tableId",
 	as: "reservations",
-	onDelete: "CASCADE",
+	onDelete: "RESTRICT",
 });
 Reservation.belongsTo(Table, {
 	foreignKey: "tableId",
 	as: "table",
-	onDelete: "CASCADE",
+	onDelete: "RESTRICT",
 });
 
 Reservation.hasOne(Review, {
