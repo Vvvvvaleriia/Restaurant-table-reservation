@@ -1,6 +1,6 @@
 import ReviewRepository from "../repositories/review.js";
 import ReservationRepository from "../repositories/reservation.js";
-import { StatusCodes } from "http-status-codes";
+import { AppError } from "../errrors/AppError.js";
 
 export default class ReviewService {
 	static async create(userId, data) {
@@ -10,19 +10,14 @@ export default class ReviewService {
 		);
 
 		if (invalidFields) {
-			throw Object.assign(new Error("Request contains invalid fields"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Request contains invalid fields");
 		}
 
 		const { reservationId, rating, comment } = data;
 
 		if (reservationId === undefined || rating === undefined) {
-			throw Object.assign(
-				new Error("reservation ID and rating are required"),
-				{
-					status: StatusCodes.BAD_REQUEST,
-				},
+			throw new AppError.badRequest(
+				"reservation ID and rating are required",
 			);
 		}
 
@@ -31,15 +26,12 @@ export default class ReviewService {
 				reservationId,
 			)
 		) {
-			throw Object.assign(new Error("Invalid reservation ID"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Invalid reservation ID");
 		}
 
 		if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-			throw Object.assign(
-				new Error("Rating must be an integer between 1 and 5"),
-				{ status: StatusCodes.BAD_REQUEST },
+			throw new AppError.badRequest(
+				"Rating must be an integer between 1 and 5",
 			);
 		}
 
@@ -48,31 +40,22 @@ export default class ReviewService {
 			comment !== null &&
 			(typeof comment !== "string" || !comment.trim())
 		) {
-			throw Object.assign(new Error("Comment must be a string"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Comment must be a string");
 		}
 
 		const reservation = await ReservationRepository.findById(reservationId);
 
 		if (!reservation) {
-			throw Object.assign(new Error("Reservation not found"), {
-				status: StatusCodes.NOT_FOUND,
-			});
+			throw new AppError.notFound("Reservation not found");
 		}
 
 		if (reservation.userId !== userId) {
-			throw Object.assign(new Error("This is not your reservation"), {
-				status: StatusCodes.FORBIDDEN,
-			});
+			throw new AppError.forbidden("This is not your reservation");
 		}
 
 		if (reservation.status !== "completed") {
-			throw Object.assign(
-				new Error(
-					"Review can only be created for completed reservations",
-				),
-				{ status: StatusCodes.BAD_REQUEST },
+			throw new AppError.badRequest(
+				"Review can only be created for completed reservations",
 			);
 		}
 
@@ -80,9 +63,8 @@ export default class ReviewService {
 			await ReviewRepository.findByReservationId(reservationId);
 
 		if (existingReview) {
-			throw Object.assign(
-				new Error("Review for this reservation already exists"),
-				{ status: StatusCodes.CONFLICT },
+			throw new AppError.conflict(
+				"Review for this reservation already exists",
 			);
 		}
 
@@ -105,11 +87,8 @@ export default class ReviewService {
 			parsedLimit > 100 ||
 			parsedPage < 1
 		) {
-			throw Object.assign(
-				new Error(
-					"Limit must be 1-100 and page must be a positive integer",
-				),
-				{ status: StatusCodes.BAD_REQUEST },
+			throw new AppError.badRequest(
+				"Limit must be 1-100 and page must be a positive integer",
 			);
 		}
 
@@ -135,9 +114,7 @@ export default class ReviewService {
 		const review = await ReviewRepository.findById(id);
 
 		if (!review) {
-			throw Object.assign(new Error("Review not found"), {
-				status: StatusCodes.NOT_FOUND,
-			});
+			throw new AppError.notFound("Review not found");
 		}
 
 		return review;
@@ -151,23 +128,17 @@ export default class ReviewService {
 			fields.length === 0 ||
 			fields.some((field) => !allowedFields.includes(field))
 		) {
-			throw Object.assign(new Error("Invalid or empty request body"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Invalid or empty request body");
 		}
 
 		const review = await ReviewRepository.findById(id);
 
 		if (!review) {
-			throw Object.assign(new Error("Review not found"), {
-				status: StatusCodes.NOT_FOUND,
-			});
+			throw new AppError.notFound("Review not found");
 		}
 
 		if (review.userId !== userId && role !== "admin") {
-			throw Object.assign(new Error("Access denied"), {
-				status: StatusCodes.FORBIDDEN,
-			});
+			throw new AppError.forbidden("Access denied");
 		}
 
 		const { rating, comment } = data;
@@ -176,9 +147,8 @@ export default class ReviewService {
 			rating !== undefined &&
 			(!Number.isInteger(rating) || rating < 1 || rating > 5)
 		) {
-			throw Object.assign(
-				new Error("Rating must be an integer between 1 and 5"),
-				{ status: StatusCodes.BAD_REQUEST },
+			throw new AppError.badRequest(
+				"Rating must be an integer between 1 and 5",
 			);
 		}
 
@@ -187,9 +157,7 @@ export default class ReviewService {
 			comment !== null &&
 			(typeof comment !== "string" || !comment.trim())
 		) {
-			throw Object.assign(new Error("Comment must be a string"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Comment must be a string");
 		}
 
 		await ReviewRepository.update(review, {
@@ -206,15 +174,11 @@ export default class ReviewService {
 		const review = await ReviewRepository.findById(id);
 
 		if (!review) {
-			throw Object.assign(new Error("Review not found"), {
-				status: StatusCodes.NOT_FOUND,
-			});
+			throw new AppError.notFound("Review not found");
 		}
 
 		if (review.userId !== userId && role !== "admin") {
-			throw Object.assign(new Error("Access denied"), {
-				status: StatusCodes.FORBIDDEN,
-			});
+			throw new AppError.forbidden("Access denied");
 		}
 
 		return await ReviewRepository.delete(review);

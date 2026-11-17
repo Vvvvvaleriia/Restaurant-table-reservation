@@ -1,5 +1,5 @@
 import TableTypeRepository from "../repositories/tableType.js";
-import { StatusCodes } from "http-status-codes";
+import { AppError } from "../errrors/AppError.js";
 
 export default class TableTypeService {
 	static async create(data) {
@@ -9,23 +9,17 @@ export default class TableTypeService {
 		);
 
 		if (invalidFields) {
-			throw Object.assign(new Error("Request contains invalid fields"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Request contains invalid fields");
 		}
 
 		const { name, description, markup } = data;
 
 		if (name === undefined || markup === undefined) {
-			throw Object.assign(new Error("Name and markup are required"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Name and markup are required");
 		}
 
 		if (typeof name !== "string" || !name.trim()) {
-			throw Object.assign(new Error("Name must be a non-empty string"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Name must be a non-empty string");
 		}
 
 		if (
@@ -33,11 +27,8 @@ export default class TableTypeService {
 			!Number.isFinite(markup) ||
 			markup < 0
 		) {
-			throw Object.assign(
-				new Error("Markup must be a non-negative number"),
-				{
-					status: StatusCodes.BAD_REQUEST,
-				},
+			throw new AppError.badRequest(
+				"Markup must be a non-negative number",
 			);
 		}
 
@@ -46,17 +37,14 @@ export default class TableTypeService {
 			description !== null &&
 			(typeof description !== "string" || !description.trim())
 		) {
-			throw Object.assign(new Error("Description must be a string"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Description must be a string");
 		}
 
 		const existingType = await TableTypeRepository.findByName(name.trim());
 
 		if (existingType) {
-			throw Object.assign(
-				new Error("Table type with this name already exists"),
-				{ status: StatusCodes.CONFLICT },
+			throw new AppError.conflict(
+				"Table type with this name already exists",
 			);
 		}
 
@@ -78,11 +66,8 @@ export default class TableTypeService {
 			parsedLimit > 100 ||
 			parsedPage < 1
 		) {
-			throw Object.assign(
-				new Error(
-					"Limit must be 1-100 and page must be a positive integer",
-				),
-				{ status: StatusCodes.BAD_REQUEST },
+			throw new AppError.badRequest(
+				"Limit must be 1-100 and page must be a positive integer",
 			);
 		}
 
@@ -108,9 +93,7 @@ export default class TableTypeService {
 		const tableType = await TableTypeRepository.findById(id);
 
 		if (!tableType) {
-			throw Object.assign(new Error("Table type not found"), {
-				status: StatusCodes.NOT_FOUND,
-			});
+			throw new AppError.notFound("Table type not found");
 		}
 
 		return tableType;
@@ -124,17 +107,13 @@ export default class TableTypeService {
 			fields.length === 0 ||
 			fields.some((field) => !allowedFields.includes(field))
 		) {
-			throw Object.assign(new Error("Invalid or empty request body"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Invalid or empty request body");
 		}
 
 		const { name, description, markup } = data;
 
 		if (name !== undefined && (typeof name !== "string" || !name.trim())) {
-			throw Object.assign(new Error("Name must be a non-empty string"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Name must be a non-empty string");
 		}
 
 		if (
@@ -143,11 +122,8 @@ export default class TableTypeService {
 				!Number.isFinite(markup) ||
 				markup < 0)
 		) {
-			throw Object.assign(
-				new Error("Markup must be a non-negative number"),
-				{
-					status: StatusCodes.BAD_REQUEST,
-				},
+			throw new AppError.badRequest(
+				"Markup must be a non-negative number",
 			);
 		}
 
@@ -156,17 +132,13 @@ export default class TableTypeService {
 			description !== null &&
 			(typeof description !== "string" || !description.trim())
 		) {
-			throw Object.assign(new Error("Description must be a string"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Description must be a string");
 		}
 
 		const tableType = await TableTypeRepository.findById(id);
 
 		if (!tableType) {
-			throw Object.assign(new Error("Table type not found"), {
-				status: StatusCodes.NOT_FOUND,
-			});
+			throw new AppError.notFound("Table type not found");
 		}
 
 		if (name !== undefined) {
@@ -175,9 +147,8 @@ export default class TableTypeService {
 			);
 
 			if (existingType && existingType.id !== tableType.id) {
-				throw Object.assign(
-					new Error("Table type with this name already exists"),
-					{ status: StatusCodes.CONFLICT },
+				throw new AppError.conflict(
+					"Table type with this name already exists",
 				);
 			}
 		}
@@ -197,9 +168,7 @@ export default class TableTypeService {
 		const tableType = await TableTypeRepository.findById(id);
 
 		if (!tableType) {
-			throw Object.assign(new Error("Table type not found"), {
-				status: StatusCodes.NOT_FOUND,
-			});
+			throw new AppError.notFound("Table type not found");
 		}
 
 		return await TableTypeRepository.delete(tableType);

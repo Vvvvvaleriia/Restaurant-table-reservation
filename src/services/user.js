@@ -1,5 +1,5 @@
 import UserRepository from "../repositories/user.js";
-import { StatusCodes } from "http-status-codes";
+import { AppError } from "../errrors/AppError.js";
 
 export default class UserService {
 	static async getAll(limit, page) {
@@ -13,11 +13,8 @@ export default class UserService {
 			parsedLimit > 100 ||
 			parsedPage < 1
 		) {
-			throw Object.assign(
-				new Error(
-					"Limit must be 1-100 and page must be a positive integer",
-				),
-				{ status: StatusCodes.BAD_REQUEST },
+			throw AppError.badRequest(
+				"Limit must be 1-100 and page must be a positive integer",
 			);
 		}
 
@@ -43,15 +40,11 @@ export default class UserService {
 		const user = await UserRepository.findById(id);
 
 		if (!user) {
-			throw Object.assign(new Error("User not found"), {
-				status: StatusCodes.NOT_FOUND,
-			});
+			throw new AppError.notFound("User not found");
 		}
 
 		if (user.id !== userId && role !== "admin") {
-			throw Object.assign(new Error("Access denied"), {
-				status: StatusCodes.FORBIDDEN,
-			});
+			throw new AppError.forbidden("Access denied");
 		}
 
 		return user;
@@ -67,47 +60,35 @@ export default class UserService {
 			fields.length === 0 ||
 			fields.some((field) => !allowedFields.includes(field))
 		) {
-			throw Object.assign(new Error("Invalid or empty request body"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Invalid or empty request body");
 		}
 
 		const user = await UserRepository.findById(id);
 
 		if (!user) {
-			throw Object.assign(new Error("User not found"), {
-				status: StatusCodes.NOT_FOUND,
-			});
+			throw new AppError.notFound("User not found");
 		}
 
 		if (user.id !== userId && role !== "admin") {
-			throw Object.assign(new Error("Access denied"), {
-				status: StatusCodes.FORBIDDEN,
-			});
+			throw new AppError.forbidden("Access denied");
 		}
 
 		if (name !== undefined) {
 			if (typeof name !== "string" || !name.trim()) {
-				throw Object.assign(new Error("Invalid name"), {
-					status: StatusCodes.BAD_REQUEST,
-				});
+				throw new AppError.badRequest("Invalid name");
 			}
 		}
 
 		let normalizedEmail;
 		if (email !== undefined) {
 			if (typeof email !== "string") {
-				throw Object.assign(new Error("Invalid email"), {
-					status: StatusCodes.BAD_REQUEST,
-				});
+				throw new AppError.badRequest("Invalid email");
 			}
 
 			normalizedEmail = email.trim().toLowerCase();
 
 			if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-				throw Object.assign(new Error("Invalid email"), {
-					status: StatusCodes.BAD_REQUEST,
-				});
+				throw new AppError.badRequest("Invalid email");
 			}
 		}
 
@@ -116,9 +97,7 @@ export default class UserService {
 				await UserRepository.findByEmail(normalizedEmail);
 
 			if (existingUser && existingUser.id !== user.id) {
-				throw Object.assign(new Error("Email already exists"), {
-					status: StatusCodes.CONFLICT,
-				});
+				throw new AppError.conflict("Email already exists");
 			}
 		}
 
@@ -127,9 +106,7 @@ export default class UserService {
 				typeof phone !== "string" ||
 				!/^\+?[0-9]{10,15}$/.test(phone.trim())
 			) {
-				throw Object.assign(new Error("Invalid phone number"), {
-					status: StatusCodes.BAD_REQUEST,
-				});
+				throw new AppError.badRequest("Invalid phone number");
 			}
 		}
 
@@ -151,15 +128,11 @@ export default class UserService {
 		const user = await UserRepository.findById(id);
 
 		if (!user) {
-			throw Object.assign(new Error("User not found"), {
-				status: StatusCodes.NOT_FOUND,
-			});
+			throw new AppError.notFound("User not found");
 		}
 
 		if (user.id !== userId && role !== "admin") {
-			throw Object.assign(new Error("Access denied"), {
-				status: StatusCodes.FORBIDDEN,
-			});
+			throw new AppError.forbidden("Access denied");
 		}
 
 		return await UserRepository.delete(user);

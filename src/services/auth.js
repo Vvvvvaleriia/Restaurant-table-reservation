@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import AuthRepository from "../repositories/auth.js";
 import UserRepository from "../repositories/user.js";
-import { StatusCodes } from "http-status-codes";
+import { AppError } from "../errrors/AppError.js";
 
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
@@ -15,17 +15,13 @@ export default class AuthService {
 		);
 
 		if (invalidFields) {
-			throw Object.assign(new Error("Unexpected fields"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Unexpected fields");
 		}
 
 		const { name, email, phone, password } = body;
 
 		if (!name || !email || !phone || !password) {
-			throw Object.assign(new Error("All fields are required"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("All fields are required");
 		}
 
 		if (
@@ -34,9 +30,7 @@ export default class AuthService {
 			typeof phone !== "string" ||
 			typeof password !== "string"
 		) {
-			throw Object.assign(new Error("Invalid field types"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Invalid field types");
 		}
 
 		const normalizedName = name.trim();
@@ -49,35 +43,26 @@ export default class AuthService {
 			!normalizedPhone ||
 			!password.trim()
 		) {
-			throw Object.assign(new Error("Fields cannot be empty"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Fields cannot be empty");
 		}
 
 		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-			throw Object.assign(new Error("Invalid email"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Invalid email");
 		}
 
 		if (!/^\+?[0-9]{10,15}$/.test(normalizedPhone)) {
-			throw Object.assign(new Error("Invalid phone number"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Invalid phone number");
 		}
 
 		const existingUser = await UserRepository.findByEmail(normalizedEmail);
 
 		if (existingUser) {
-			throw Object.assign(new Error("Email already exists"), {
-				status: StatusCodes.CONFLICT,
-			});
+			throw new AppError.conflict("Email already exists");
 		}
 
 		if (password.length < 8 || password.length > 72) {
-			throw Object.assign(
-				new Error("Password must be between 8 and 72 characters"),
-				{ status: StatusCodes.BAD_REQUEST },
+			throw new AppError.badRequest(
+				"Password must be between 8 and 72 characters",
 			);
 		}
 
@@ -107,9 +92,7 @@ export default class AuthService {
 			!email.trim() ||
 			!password
 		) {
-			throw Object.assign(new Error("Email and password are required"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Email and password are required");
 		}
 
 		const normalizedEmail = email.trim().toLowerCase();
@@ -117,9 +100,7 @@ export default class AuthService {
 		const user = await UserRepository.findByEmail(normalizedEmail);
 
 		if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-			throw Object.assign(new Error("Invalid email or password"), {
-				status: StatusCodes.UNAUTHORIZED,
-			});
+			throw new AppError.unauthorized("Invalid email or password");
 		}
 
 		const accessToken = jwt.sign(
@@ -140,9 +121,7 @@ export default class AuthService {
 		const user = await AuthRepository.findProfile(userId);
 
 		if (!user) {
-			throw Object.assign(new Error("User not found"), {
-				status: StatusCodes.NOT_FOUND,
-			});
+			throw new AppError.notFound("User not found");
 		}
 		return user;
 	}
@@ -151,26 +130,20 @@ export default class AuthService {
 		const { refreshToken } = body;
 
 		if (typeof refreshToken !== "string" || !refreshToken) {
-			throw Object.assign(new Error("Refresh token is required"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Refresh token is required");
 		}
 
 		let payload;
 		try {
 			payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
 		} catch {
-			throw Object.assign(new Error("Invalid or expired refresh token"), {
-				status: StatusCodes.UNAUTHORIZED,
-			});
+			throw new AppError.unauthorized("Invalid or expired refresh token");
 		}
 
 		const user = await AuthRepository.findById(payload.id);
 
 		if (!user || user.refreshToken !== refreshToken) {
-			throw Object.assign(new Error("Invalid refresh token"), {
-				status: StatusCodes.UNAUTHORIZED,
-			});
+			throw new AppError.unauthorized("Invalid refresh token");
 		}
 
 		const accessToken = jwt.sign(
@@ -197,9 +170,7 @@ export default class AuthService {
 		const { refreshToken } = body;
 
 		if (typeof refreshToken !== "string" || !refreshToken) {
-			throw Object.assign(new Error("Refresh token is required"), {
-				status: StatusCodes.BAD_REQUEST,
-			});
+			throw new AppError.badRequest("Refresh token is required");
 		}
 
 		const user = await AuthRepository.findByRefreshToken(refreshToken);
