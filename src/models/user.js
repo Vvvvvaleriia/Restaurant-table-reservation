@@ -13,26 +13,34 @@ export const User = sequelize.define(
 			},
 		},
 		name: {
-			type: DataTypes.STRING(100),
+			type: DataTypes.STRING(50),
+			allowNull: false,
 			validate: {
 				notEmpty: true,
+				len: [2, 50],
 			},
 		},
 		email: {
-			type: DataTypes.STRING(255),
+			type: DataTypes.STRING(100),
+			allowNull: false,
 			unique: true,
 			validate: {
 				notEmpty: true,
+				isEmail: true,
+				len: [3, 100],
 			},
 		},
 		phone: {
-			type: DataTypes.STRING(20),
+			type: DataTypes.STRING(16),
+			allowNull: false,
 			validate: {
 				notEmpty: true,
+				is: /^\+?[0-9]{7,15}$/,
 			},
 		},
 		passwordHash: {
-			type: DataTypes.STRING(255),
+			type: DataTypes.STRING(60),
+			allowNull: false,
 			validate: {
 				notEmpty: true,
 			},
@@ -49,5 +57,6 @@ export const User = sequelize.define(
 	},
 	{
 		tableName: "users",
+		paranoid: true,
 	},
 );

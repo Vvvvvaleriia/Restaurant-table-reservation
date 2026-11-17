@@ -13,16 +13,14 @@ export const Reservation = sequelize.define(
 		reservationDatetime: {
 			type: DataTypes.DATE,
 			allowNull: false,
-			validate: {
-				isDate: true,
-				isAfter: new Date().toISOString(),
-			},
 		},
 		guests: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
 			validate: {
+				isInt: true,
 				min: 1,
+				max: 50,
 			},
 		},
 		status: {
@@ -41,5 +39,10 @@ export const Reservation = sequelize.define(
 	},
 	{
 		tableName: "reservations",
+		paranoid: true,
+		indexes: [
+			{ fields: ["userId"] },
+			{ fields: ["tableId", "reservationDatetime"] },
+		],
 	},
 );

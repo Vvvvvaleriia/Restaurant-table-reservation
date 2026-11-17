@@ -11,23 +11,29 @@ export const TableType = sequelize.define(
 			allowNull: false,
 		},
 		name: {
-			type: DataTypes.STRING(10),
+			type: DataTypes.STRING(50),
 			allowNull: false,
 			unique: true,
 			validate: {
 				notEmpty: true,
+				len: [2, 50],
 			},
 		},
 		description: {
-			type: DataTypes.TEXT,
+			type: DataTypes.STRING(500),
 			allowNull: true,
+			validate: {
+				len: [0, 500],
+			},
 		},
 		markup: {
-			type: DataTypes.DECIMAL(10, 2),
+			type: DataTypes.DECIMAL(8, 2),
 			allowNull: false,
 			defaultValue: 0,
 			validate: {
+				isDecimal: true,
 				min: 0,
+				max: 100000,
 			},
 		},
 	},

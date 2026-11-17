@@ -62,7 +62,6 @@ export default class TableTypeController {
 	}
 
 	static async update(req, resp) {
-		console.log("UPDATE TABLE TYPE CALLED");
 		try {
 			const { id } = req.params;
 
@@ -90,7 +89,7 @@ export default class TableTypeController {
 			await TableTypeService.delete(id);
 
 			return resp.status(StatusCodes.OK).json({
-				message: "Table type delete successfuly",
+				message: "Table type deleted successfuly",
 			});
 		} catch (error) {
 			if (error.status) {

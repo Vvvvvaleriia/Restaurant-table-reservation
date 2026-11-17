@@ -87,7 +87,7 @@ export default class TableController {
 			await TableService.delete(id);
 
 			return resp.status(StatusCodes.OK).json({
-				message: "Table delete successfuly",
+				message: "Table deleted successfuly",
 			});
 		} catch (error) {
 			if (error.status) {

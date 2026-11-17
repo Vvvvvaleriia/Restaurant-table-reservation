@@ -30,7 +30,7 @@ export default class TableService {
 
 		if (!Number.isInteger(tableNumber) || tableNumber < 1) {
 			throw Object.assign(
-				new Error("Table number must be a positive number"),
+				new Error("Table number must be a positive integer"),
 				{ status: StatusCodes.BAD_REQUEST },
 			);
 		}

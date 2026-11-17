@@ -15,14 +15,18 @@ export const Table = sequelize.define(
 			allowNull: false,
 			unique: true,
 			validate: {
+				isInt: true,
 				min: 1,
+				max: 9999,
 			},
 		},
 		seats: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
 			validate: {
+				isInt: true,
 				min: 1,
+				max: 50,
 			},
 		},
 		tableTypeId: {
@@ -32,5 +36,13 @@ export const Table = sequelize.define(
 	},
 	{
 		tableName: "tables",
+		paranoid: true,
+		indexes: [
+			{
+				unique: true,
+				fields: ["tableNumber"],
+				where: { deletedAt: null },
+			},
+		],
 	},
 );

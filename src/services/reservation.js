@@ -99,7 +99,7 @@ export default class ReservationService {
 		if (reservedTable) {
 			throw Object.assign(
 				new Error("This table has active reservation for this time"),
-				{ status: StatusCodes.BAD_REQUEST },
+				{ status: StatusCodes.CONFLICT },
 			);
 		}
 
@@ -195,7 +195,7 @@ export default class ReservationService {
 
 		if (reservation.reservationDatetime <= new Date()) {
 			throw Object.assign(new Error("Reservation can`t be updated"), {
-				status: StatusCodes.BAD_REQUEST,
+				status: StatusCodes.CONFLICT,
 			});
 		}
 
@@ -324,7 +324,7 @@ export default class ReservationService {
 
 		if (["cancelled", "completed"].includes(reservation.status)) {
 			throw Object.assign(new Error("Reservation can't be cancelled"), {
-				status: StatusCodes.FORBIDDEN,
+				status: StatusCodes.CONFLICT,
 			});
 		}
 
@@ -333,7 +333,7 @@ export default class ReservationService {
 				throw Object.assign(
 					new Error("Reservation has already started or passed"),
 					{
-						status: StatusCodes.BAD_REQUEST,
+						status: StatusCodes.CONFLICT,
 					},
 				);
 			}

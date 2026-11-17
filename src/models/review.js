@@ -19,8 +19,11 @@ export const Review = sequelize.define(
 			},
 		},
 		comment: {
-			type: DataTypes.TEXT,
+			type: DataTypes.STRING(500),
 			allowNull: true,
+			validate: {
+				len: [0, 500],
+			},
 		},
 		userId: {
 			type: DataTypes.UUID,
