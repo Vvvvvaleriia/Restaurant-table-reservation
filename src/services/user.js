@@ -1,5 +1,6 @@
 import UserRepository from "../repositories/user.js";
 import { AppError } from "../errrors/AppError.js";
+import { sequelize } from "../db.js";
 
 export default class UserService {
 	static async getAll(limit, page) {
@@ -125,16 +126,25 @@ export default class UserService {
 	}
 
 	static async delete(userId, role, id) {
-		const user = await UserRepository.findById(id);
+		const transaction = await sequelize.transaction();
 
-		if (!user) {
-			throw AppError.notFound("User not found");
+		try {
+			const user = await UserRepository.findById(id);
+
+			if (!user) {
+				throw AppError.notFound("User not found");
+			}
+
+			if (user.id !== userId && role !== "admin") {
+				throw AppError.forbidden("Access denied");
+			}
+
+			await UserRepository.delete(id, transaction);
+			await transaction.commit();
+			return user;
+		} catch (error) {
+			await transaction.rollback();
+			throw error;
 		}
-
-		if (user.id !== userId && role !== "admin") {
-			throw AppError.forbidden("Access denied");
-		}
-
-		return await UserRepository.delete(user);
 	}
 }

@@ -1,6 +1,7 @@
 import TableRepository from "../repositories/table.js";
 import TableTypeRepository from "../repositories/tableType.js";
 import { AppError } from "../errrors/AppError.js";
+import { sequelize } from "../db.js";
 
 export default class TableService {
 	static async create(data) {
@@ -185,12 +186,21 @@ export default class TableService {
 	}
 
 	static async delete(id) {
-		const table = await TableRepository.findById(id);
+		const transaction = await sequelize.transaction();
 
-		if (!table) {
-			throw AppError.notFound("Table not found");
+		try {
+			const table = await TableRepository.findById(id, transaction);
+
+			if (!table) {
+				throw AppError.notFound("Table not found");
+			}
+
+			await TableRepository.delete(id, transaction);
+			await transaction.commit();
+			return table;
+		} catch (error) {
+			await transaction.rollback();
+			throw error;
 		}
-
-		return await TableRepository.delete(table);
 	}
 }

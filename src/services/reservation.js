@@ -2,6 +2,7 @@ import ReservationRepository from "../repositories/reservation.js";
 import TableRepository from "../repositories/table.js";
 import UserRepository from "../repositories/user.js";
 import { AppError } from "../errrors/AppError.js";
+import { sequelize } from "../db.js";
 
 export default class ReservationService {
 	static async create(userId, data) {
@@ -284,16 +285,28 @@ export default class ReservationService {
 	}
 
 	static async delete(userId, role, id) {
-		const reservation = await ReservationRepository.findById(id);
+		const transaction = await sequelize.transaction();
 
-		if (!reservation) {
-			throw AppError.notFound("Reservation not found");
+		try {
+			const reservation = await ReservationRepository.findById(
+				id,
+				transaction,
+			);
+
+			if (!reservation) {
+				throw AppError.notFound("Reservation not found");
+			}
+
+			if (reservation.userId !== userId && role !== "admin") {
+				throw AppError.forbidden("Access denied");
+			}
+
+			await ReservationRepository.delete(id, transaction);
+			await transaction.commit();
+			return reservation;
+		} catch (error) {
+			await transaction.rollback();
+			throw error;
 		}
-
-		if (reservation.userId !== userId && role !== "admin") {
-			throw AppError.forbidden("Access denied");
-		}
-
-		return await ReservationRepository.delete(reservation);
 	}
 }

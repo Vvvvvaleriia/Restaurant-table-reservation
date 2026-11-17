@@ -7,12 +7,16 @@ export default class TableRepository {
 
 	static async findAll({ limit, offset }) {
 		return await Table.findAndCountAll({
+			where: {
+				deletedAt: null,
+			},
 			limit: limit,
 			offset: offset,
 			order: [["createdAt", "DESC"]],
 			include: [
 				{
 					model: TableType,
+					as: "tableType",
 					attributes: ["name", "description", "markup"],
 				},
 			],
@@ -20,7 +24,11 @@ export default class TableRepository {
 	}
 
 	static async findById(id) {
-		return await Table.findByPk(id, {
+		return await Table.findOne({
+			where: {
+				id: id,
+				deletedAt: null,
+			},
 			include: [
 				{
 					model: TableType,
@@ -33,7 +41,10 @@ export default class TableRepository {
 
 	static async findByNumber(tableNumber) {
 		return await Table.findOne({
-			where: { tableNumber },
+			where: {
+				tableNumber: tableNumber,
+				deletedAt: null,
+			},
 		});
 	}
 
@@ -41,7 +52,14 @@ export default class TableRepository {
 		return await table.update(data);
 	}
 
-	static async delete(table) {
-		return await table.destroy();
+	static async delete(id, transaction) {
+		const table = await Table.findByPk(id, { transaction });
+
+		if (!table) {
+			return null;
+		}
+
+		await table.destroy({ transaction });
+		return table;
 	}
 }

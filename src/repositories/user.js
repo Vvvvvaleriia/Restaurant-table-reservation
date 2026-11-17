@@ -3,6 +3,9 @@ import { User } from "../models/index.js";
 export default class UserRepository {
 	static async findAll({ limit, offset }) {
 		return await User.findAndCountAll({
+			where: {
+				deletedAt: null,
+			},
 			limit,
 			offset,
 			order: [["createdAt", "DESC"]],
@@ -13,7 +16,11 @@ export default class UserRepository {
 	}
 
 	static async findById(id) {
-		return await User.findByPk(id, {
+		return await User.findOne({
+			where: {
+				id: id,
+				deletedAt: null,
+			},
 			attributes: {
 				exclude: ["passwordHash", "refreshToken"],
 			},
@@ -23,7 +30,8 @@ export default class UserRepository {
 	static async findByEmail(email) {
 		return await User.findOne({
 			where: {
-				email,
+				email: email,
+				deletedAt: null,
 			},
 		});
 	}
@@ -32,7 +40,14 @@ export default class UserRepository {
 		return await user.update(data);
 	}
 
-	static async delete(user) {
-		return await user.destroy();
+	static async delete(id, transaction) {
+		const user = await User.findByPk(id, { transaction });
+
+		if (!user) {
+			return null;
+		}
+
+		await user.destroy({ transaction });
+		return user;
 	}
 }

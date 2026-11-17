@@ -28,6 +28,9 @@ export default class ReservationRepository {
 
 	static async findAll({ limit, offset }) {
 		return await Reservation.findAndCountAll({
+			where: {
+				deletedAt: null,
+			},
 			limit: limit,
 			offset: offset,
 			order: [["createdAt", "DESC"]],
@@ -36,7 +39,11 @@ export default class ReservationRepository {
 	}
 
 	static async findById(id) {
-		return await Reservation.findByPk(id, {
+		return await Reservation.findOne({
+			where: {
+				id: id,
+				deletedAt: null,
+			},
 			include: includeToReservation,
 		});
 	}
@@ -48,6 +55,7 @@ export default class ReservationRepository {
 		const where = {
 			tableId,
 			status: "active",
+			deletedAt: null,
 			[Op.and]: [
 				Sequelize.where(
 					Sequelize.col("reservation_datetime"),
@@ -77,7 +85,15 @@ export default class ReservationRepository {
 		return await reservation.update(data);
 	}
 
-	static async delete(reservation) {
-		return await reservation.destroy();
+	static async delete(id, transaction) {
+		const reservation = await Reservation.findByPk(id, { transaction });
+
+		if (!reservation) {
+			return null;
+		}
+
+		await reservation.destroy({ transaction });
+
+		return reservation;
 	}
 }
