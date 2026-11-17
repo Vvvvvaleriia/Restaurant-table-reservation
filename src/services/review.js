@@ -10,15 +10,13 @@ export default class ReviewService {
 		);
 
 		if (invalidFields) {
-			throw new AppError.badRequest("Request contains invalid fields");
+			throw AppError.badRequest("Request contains invalid fields");
 		}
 
 		const { reservationId, rating, comment } = data;
 
 		if (reservationId === undefined || rating === undefined) {
-			throw new AppError.badRequest(
-				"reservation ID and rating are required",
-			);
+			throw AppError.badRequest("reservation ID and rating are required");
 		}
 
 		if (
@@ -26,11 +24,11 @@ export default class ReviewService {
 				reservationId,
 			)
 		) {
-			throw new AppError.badRequest("Invalid reservation ID");
+			throw AppError.badRequest("Invalid reservation ID");
 		}
 
 		if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-			throw new AppError.badRequest(
+			throw AppError.badRequest(
 				"Rating must be an integer between 1 and 5",
 			);
 		}
@@ -40,21 +38,21 @@ export default class ReviewService {
 			comment !== null &&
 			(typeof comment !== "string" || !comment.trim())
 		) {
-			throw new AppError.badRequest("Comment must be a string");
+			throw AppError.badRequest("Comment must be a string");
 		}
 
 		const reservation = await ReservationRepository.findById(reservationId);
 
 		if (!reservation) {
-			throw new AppError.notFound("Reservation not found");
+			throw AppError.notFound("Reservation not found");
 		}
 
 		if (reservation.userId !== userId) {
-			throw new AppError.forbidden("This is not your reservation");
+			throw AppError.forbidden("This is not your reservation");
 		}
 
 		if (reservation.status !== "completed") {
-			throw new AppError.badRequest(
+			throw AppError.badRequest(
 				"Review can only be created for completed reservations",
 			);
 		}
@@ -63,7 +61,7 @@ export default class ReviewService {
 			await ReviewRepository.findByReservationId(reservationId);
 
 		if (existingReview) {
-			throw new AppError.conflict(
+			throw AppError.conflict(
 				"Review for this reservation already exists",
 			);
 		}
@@ -87,7 +85,7 @@ export default class ReviewService {
 			parsedLimit > 100 ||
 			parsedPage < 1
 		) {
-			throw new AppError.badRequest(
+			throw AppError.badRequest(
 				"Limit must be 1-100 and page must be a positive integer",
 			);
 		}
@@ -114,7 +112,7 @@ export default class ReviewService {
 		const review = await ReviewRepository.findById(id);
 
 		if (!review) {
-			throw new AppError.notFound("Review not found");
+			throw AppError.notFound("Review not found");
 		}
 
 		return review;
@@ -128,17 +126,17 @@ export default class ReviewService {
 			fields.length === 0 ||
 			fields.some((field) => !allowedFields.includes(field))
 		) {
-			throw new AppError.badRequest("Invalid or empty request body");
+			throw AppError.badRequest("Invalid or empty request body");
 		}
 
 		const review = await ReviewRepository.findById(id);
 
 		if (!review) {
-			throw new AppError.notFound("Review not found");
+			throw AppError.notFound("Review not found");
 		}
 
 		if (review.userId !== userId && role !== "admin") {
-			throw new AppError.forbidden("Access denied");
+			throw AppError.forbidden("Access denied");
 		}
 
 		const { rating, comment } = data;
@@ -147,7 +145,7 @@ export default class ReviewService {
 			rating !== undefined &&
 			(!Number.isInteger(rating) || rating < 1 || rating > 5)
 		) {
-			throw new AppError.badRequest(
+			throw AppError.badRequest(
 				"Rating must be an integer between 1 and 5",
 			);
 		}
@@ -157,7 +155,7 @@ export default class ReviewService {
 			comment !== null &&
 			(typeof comment !== "string" || !comment.trim())
 		) {
-			throw new AppError.badRequest("Comment must be a string");
+			throw AppError.badRequest("Comment must be a string");
 		}
 
 		await ReviewRepository.update(review, {
@@ -174,11 +172,11 @@ export default class ReviewService {
 		const review = await ReviewRepository.findById(id);
 
 		if (!review) {
-			throw new AppError.notFound("Review not found");
+			throw AppError.notFound("Review not found");
 		}
 
 		if (review.userId !== userId && role !== "admin") {
-			throw new AppError.forbidden("Access denied");
+			throw AppError.forbidden("Access denied");
 		}
 
 		return await ReviewRepository.delete(review);

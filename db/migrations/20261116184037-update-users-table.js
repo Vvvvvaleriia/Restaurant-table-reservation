@@ -30,11 +30,6 @@ module.exports = {
 			unique: false,
 		});
 
-		await queryInterface.addColumn("users", "deleted_at", {
-			type: Sequelize.DATE,
-			allowNull: true,
-		});
-
 		await queryInterface.addConstraint("users", {
 			fields: ["name"],
 			type: "check",
@@ -62,7 +57,7 @@ module.exports = {
 			fields: ["password_hash"],
 			type: "check",
 			where: Sequelize.literal("LENGTH(password_hash) > 0"),
-			name: "users_password_hash_check",
+			name: "users_password_hash_length_check",
 		});
 	},
 
@@ -81,9 +76,8 @@ module.exports = {
 		);
 		await queryInterface.removeConstraint(
 			"users",
-			"users_password_hash_check",
+			"users_password_hash_length_check",
 		);
-		await queryInterface.removeColumn("users", "deleted_at");
 
 		await queryInterface.changeColumn("users", "name", {
 			type: Sequelize.STRING(100),

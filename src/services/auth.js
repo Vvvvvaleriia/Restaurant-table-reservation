@@ -15,13 +15,13 @@ export default class AuthService {
 		);
 
 		if (invalidFields) {
-			throw new AppError.badRequest("Unexpected fields");
+			throw AppError.badRequest("Unexpected fields");
 		}
 
 		const { name, email, phone, password } = body;
 
 		if (!name || !email || !phone || !password) {
-			throw new AppError.badRequest("All fields are required");
+			throw AppError.badRequest("All fields are required");
 		}
 
 		if (
@@ -30,7 +30,7 @@ export default class AuthService {
 			typeof phone !== "string" ||
 			typeof password !== "string"
 		) {
-			throw new AppError.badRequest("Invalid field types");
+			throw AppError.badRequest("Invalid field types");
 		}
 
 		const normalizedName = name.trim();
@@ -43,25 +43,25 @@ export default class AuthService {
 			!normalizedPhone ||
 			!password.trim()
 		) {
-			throw new AppError.badRequest("Fields cannot be empty");
+			throw AppError.badRequest("Fields cannot be empty");
 		}
 
 		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-			throw new AppError.badRequest("Invalid email");
+			throw AppError.badRequest("Invalid email");
 		}
 
 		if (!/^\+?[0-9]{10,15}$/.test(normalizedPhone)) {
-			throw new AppError.badRequest("Invalid phone number");
+			throw AppError.badRequest("Invalid phone number");
 		}
 
 		const existingUser = await UserRepository.findByEmail(normalizedEmail);
 
 		if (existingUser) {
-			throw new AppError.conflict("Email already exists");
+			throw AppError.conflict("Email already exists");
 		}
 
 		if (password.length < 8 || password.length > 72) {
-			throw new AppError.badRequest(
+			throw AppError.badRequest(
 				"Password must be between 8 and 72 characters",
 			);
 		}
@@ -92,7 +92,7 @@ export default class AuthService {
 			!email.trim() ||
 			!password
 		) {
-			throw new AppError.badRequest("Email and password are required");
+			throw AppError.badRequest("Email and password are required");
 		}
 
 		const normalizedEmail = email.trim().toLowerCase();
@@ -100,7 +100,7 @@ export default class AuthService {
 		const user = await UserRepository.findByEmail(normalizedEmail);
 
 		if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-			throw new AppError.unauthorized("Invalid email or password");
+			throw AppError.unauthorized("Invalid email or password");
 		}
 
 		const accessToken = jwt.sign(
@@ -121,7 +121,7 @@ export default class AuthService {
 		const user = await AuthRepository.findProfile(userId);
 
 		if (!user) {
-			throw new AppError.notFound("User not found");
+			throw AppError.notFound("User not found");
 		}
 		return user;
 	}
@@ -130,24 +130,24 @@ export default class AuthService {
 		const { refreshToken } = body;
 
 		if (typeof refreshToken !== "string" || !refreshToken) {
-			throw new AppError.badRequest("Refresh token is required");
+			throw AppError.badRequest("Refresh token is required");
 		}
 
 		let payload;
 		try {
 			payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
 		} catch {
-			throw new AppError.unauthorized("Invalid or expired refresh token");
+			throw AppError.unauthorized("Invalid or expired refresh token");
 		}
 
 		const user = await AuthRepository.findById(payload.id);
 
 		if (!user || user.refreshToken !== refreshToken) {
-			throw new AppError.unauthorized("Invalid refresh token");
+			throw AppError.unauthorized("Invalid refresh token");
 		}
 
 		const accessToken = jwt.sign(
-			{ id: user.id, role: user.role },
+			{ id: user.id, email: user.email, role: user.role },
 			JWT_ACCESS_SECRET,
 			{
 				expiresIn: "15m",
@@ -170,7 +170,7 @@ export default class AuthService {
 		const { refreshToken } = body;
 
 		if (typeof refreshToken !== "string" || !refreshToken) {
-			throw new AppError.badRequest("Refresh token is required");
+			throw AppError.badRequest("Refresh token is required");
 		}
 
 		const user = await AuthRepository.findByRefreshToken(refreshToken);

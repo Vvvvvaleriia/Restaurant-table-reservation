@@ -10,7 +10,7 @@ export default class TableService {
 		);
 
 		if (invalidFields) {
-			throw new AppError.badRequest("Request contains invalid fields");
+			throw AppError.badRequest("Request contains invalid fields");
 		}
 
 		const { tableNumber, seats, tableTypeId } = data;
@@ -20,19 +20,19 @@ export default class TableService {
 			seats === undefined ||
 			tableTypeId === undefined
 		) {
-			throw new AppError.badRequest(
+			throw AppError.badRequest(
 				"Table number, seats and table type id are required",
 			);
 		}
 
 		if (!Number.isInteger(tableNumber) || tableNumber < 1) {
-			throw new AppError.badRequest(
+			throw AppError.badRequest(
 				"Table number must be a positive integer",
 			);
 		}
 
 		if (!Number.isInteger(seats) || seats < 1) {
-			throw new AppError.badRequest("Seats must be a positive number");
+			throw AppError.badRequest("Seats must be a positive number");
 		}
 
 		if (
@@ -40,20 +40,20 @@ export default class TableService {
 				tableTypeId,
 			)
 		) {
-			throw new AppError.badRequest("Invalid table type ID");
+			throw AppError.badRequest("Invalid table type ID");
 		}
 
 		const tableType = await TableTypeRepository.findById(tableTypeId);
 
 		if (!tableType) {
-			throw new AppError.notFound("Table type not found");
+			throw AppError.notFound("Table type not found");
 		}
 
 		const existingTableNumber =
 			await TableRepository.findByNumber(tableNumber);
 
 		if (existingTableNumber) {
-			throw new AppError.conflict("This table number already exists");
+			throw AppError.conflict("This table number already exists");
 		}
 
 		const table = await TableRepository.create({
@@ -81,7 +81,7 @@ export default class TableService {
 			parsedLimit > 100 ||
 			parsedPage < 1
 		) {
-			throw new AppError.badRequest(
+			throw AppError.badRequest(
 				"Limit must be 1-100 and page must be a positive integer",
 			);
 		}
@@ -108,7 +108,7 @@ export default class TableService {
 		const table = await TableRepository.findById(id);
 
 		if (!table) {
-			throw new AppError.notFound("Table not found");
+			throw AppError.notFound("Table not found");
 		}
 
 		return table;
@@ -122,13 +122,13 @@ export default class TableService {
 			fields.length === 0 ||
 			fields.some((field) => !allowedFields.includes(field))
 		) {
-			throw new AppError.badRequest("Invalid or empty request body");
+			throw AppError.badRequest("Invalid or empty request body");
 		}
 
 		const table = await TableRepository.findById(id);
 
 		if (!table) {
-			throw new AppError.notFound("Table not found");
+			throw AppError.notFound("Table not found");
 		}
 
 		const { tableNumber, seats, tableTypeId } = data;
@@ -137,13 +137,13 @@ export default class TableService {
 			tableNumber !== undefined &&
 			(!Number.isInteger(tableNumber) || tableNumber < 1)
 		) {
-			throw new AppError.badRequest(
+			throw AppError.badRequest(
 				"Table number must be a positive integer",
 			);
 		}
 
 		if (seats !== undefined && (!Number.isInteger(seats) || seats < 1)) {
-			throw new AppError.badRequest("Seats must be a positive integer");
+			throw AppError.badRequest("Seats must be a positive integer");
 		}
 
 		if (tableTypeId !== undefined) {
@@ -152,7 +152,7 @@ export default class TableService {
 					tableTypeId,
 				)
 			) {
-				throw new AppError.badRequest("Invalid table type ID");
+				throw AppError.badRequest("Invalid table type ID");
 			}
 		}
 
@@ -160,7 +160,7 @@ export default class TableService {
 			const tableType = await TableTypeRepository.findById(tableTypeId);
 
 			if (!tableType) {
-				throw new AppError.notFound("Table type not found");
+				throw AppError.notFound("Table type not found");
 			}
 		}
 
@@ -169,7 +169,7 @@ export default class TableService {
 				await TableRepository.findByNumber(tableNumber);
 
 			if (existingTable && existingTable.id !== table.id) {
-				throw new AppError.conflict("This table number already exists");
+				throw AppError.conflict("This table number already exists");
 			}
 		}
 
@@ -188,7 +188,7 @@ export default class TableService {
 		const table = await TableRepository.findById(id);
 
 		if (!table) {
-			throw new AppError.notFound("Table not found");
+			throw AppError.notFound("Table not found");
 		}
 
 		return await TableRepository.delete(table);

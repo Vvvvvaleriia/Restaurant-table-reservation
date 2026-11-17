@@ -14,6 +14,7 @@ const includeToReservation = [
 		include: [
 			{
 				model: TableType,
+				as: "tableType",
 				attributes: ["name", "description", "markup"],
 			},
 		],

@@ -32,7 +32,6 @@ router.put(
 router.patch(
 	"/:id/cancel",
 	authMiddleware,
-	validateBodyMiddleware,
 	checkUuidMiddleware,
 	ReservationController.cancel,
 );
@@ -41,4 +40,4 @@ router.delete(
 	authMiddleware,
 	checkUuidMiddleware,
 	ReservationController.delete,
-); // тільки для адміна
+);

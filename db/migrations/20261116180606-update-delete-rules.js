@@ -5,7 +5,7 @@ module.exports = {
 	async up(queryInterface, Sequelize) {
 		await queryInterface.removeConstraint(
 			"reservations",
-			"reservation_user_id_fkey",
+			"reservations_user_id_fkey",
 		);
 
 		await queryInterface.addConstraint("reservations", {
@@ -41,7 +41,7 @@ module.exports = {
 	async down(queryInterface, Sequelize) {
 		await queryInterface.removeConstraint(
 			"reservations",
-			"reservation_user_id_fkey",
+			"reservations_user_id_fkey",
 		);
 
 		await queryInterface.addConstraint("reservations", {

@@ -32,6 +32,11 @@ module.exports = {
 			name: "tables_seats_range_check",
 		});
 
+		await queryInterface.removeConstraint(
+			"tables",
+			"tables_table_number_key",
+		);
+
 		await queryInterface.addIndex("tables", ["table_number"], {
 			unique: true,
 			where: {
@@ -58,5 +63,11 @@ module.exports = {
 		);
 
 		await queryInterface.removeColumn("tables", "deleted_at");
+
+		await queryInterface.addConstraint("tables", {
+			fields: ["table_number"],
+			type: "unique",
+			name: "tables_table_number_key",
+		});
 	},
 };

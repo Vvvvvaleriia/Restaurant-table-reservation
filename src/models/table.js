@@ -13,7 +13,6 @@ export const Table = sequelize.define(
 		tableNumber: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			unique: true,
 			validate: {
 				isInt: true,
 				min: 1,

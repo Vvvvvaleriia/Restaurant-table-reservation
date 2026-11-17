@@ -40,11 +40,11 @@ export default class UserService {
 		const user = await UserRepository.findById(id);
 
 		if (!user) {
-			throw new AppError.notFound("User not found");
+			throw AppError.notFound("User not found");
 		}
 
 		if (user.id !== userId && role !== "admin") {
-			throw new AppError.forbidden("Access denied");
+			throw AppError.forbidden("Access denied");
 		}
 
 		return user;
@@ -60,35 +60,35 @@ export default class UserService {
 			fields.length === 0 ||
 			fields.some((field) => !allowedFields.includes(field))
 		) {
-			throw new AppError.badRequest("Invalid or empty request body");
+			throw AppError.badRequest("Invalid or empty request body");
 		}
 
 		const user = await UserRepository.findById(id);
 
 		if (!user) {
-			throw new AppError.notFound("User not found");
+			throw AppError.notFound("User not found");
 		}
 
 		if (user.id !== userId && role !== "admin") {
-			throw new AppError.forbidden("Access denied");
+			throw AppError.forbidden("Access denied");
 		}
 
 		if (name !== undefined) {
 			if (typeof name !== "string" || !name.trim()) {
-				throw new AppError.badRequest("Invalid name");
+				throw AppError.badRequest("Invalid name");
 			}
 		}
 
 		let normalizedEmail;
 		if (email !== undefined) {
 			if (typeof email !== "string") {
-				throw new AppError.badRequest("Invalid email");
+				throw AppError.badRequest("Invalid email");
 			}
 
 			normalizedEmail = email.trim().toLowerCase();
 
 			if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-				throw new AppError.badRequest("Invalid email");
+				throw AppError.badRequest("Invalid email");
 			}
 		}
 
@@ -97,7 +97,7 @@ export default class UserService {
 				await UserRepository.findByEmail(normalizedEmail);
 
 			if (existingUser && existingUser.id !== user.id) {
-				throw new AppError.conflict("Email already exists");
+				throw AppError.conflict("Email already exists");
 			}
 		}
 
@@ -106,7 +106,7 @@ export default class UserService {
 				typeof phone !== "string" ||
 				!/^\+?[0-9]{10,15}$/.test(phone.trim())
 			) {
-				throw new AppError.badRequest("Invalid phone number");
+				throw AppError.badRequest("Invalid phone number");
 			}
 		}
 
@@ -128,11 +128,11 @@ export default class UserService {
 		const user = await UserRepository.findById(id);
 
 		if (!user) {
-			throw new AppError.notFound("User not found");
+			throw AppError.notFound("User not found");
 		}
 
 		if (user.id !== userId && role !== "admin") {
-			throw new AppError.forbidden("Access denied");
+			throw AppError.forbidden("Access denied");
 		}
 
 		return await UserRepository.delete(user);
