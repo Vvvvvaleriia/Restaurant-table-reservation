@@ -132,3 +132,17 @@ export function checkEnum(value, allowed, message) {
 		throw AppError.badRequest(message);
 	}
 }
+
+export function parseDate(value, fieldName) {
+	if (typeof value !== "string" || !value.trim()) {
+		throw AppError.badRequest(`${fieldName} is required`);
+	}
+
+	const date = new Date(value);
+
+	if (Number.isNaN(date.getTime())) {
+		throw AppError.badRequest(`Invalid ${fieldName} date`);
+	}
+
+	return date;
+}

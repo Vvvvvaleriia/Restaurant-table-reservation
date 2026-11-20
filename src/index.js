@@ -7,6 +7,7 @@ import { router as routerTableType } from "./routes/tableTypes.js";
 import { router as routerTable } from "./routes/tables.js";
 import { router as routerReview } from "./routes/reviews.js";
 import { router as routerReservation } from "./routes/reservations.js";
+import { router as routerStatistic } from "./routes/statistic.js";
 import { sequelize } from "./db.js";
 import errorMiddleware from "./middleware/errorMiddleware.js";
 
@@ -21,6 +22,7 @@ app.use("/tableTypes", routerTableType);
 app.use("/tables", routerTable);
 app.use("/reservations", routerReservation);
 app.use("/reviews", routerReview);
+app.use("/admin/stats", routerStatistic);
 app.use(errorMiddleware);
 await sequelize.authenticate();
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
