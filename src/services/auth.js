@@ -1,5 +1,4 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import AuthRepository from "../repositories/auth.js";
 import { AppError } from "../errors/AppError.js";
 import {
@@ -11,13 +10,12 @@ import {
 	checkRefreshToken,
 	verifyRefreshToken,
 } from "../utils/validation.js";
+import { checkEmailNotTaken, profileExists } from "../utils/exists.js";
 import {
-	checkEmailNotTaken,
-	profileExists,
-	userByEmailExists,
-	userExists,
-} from "../utils/exists.js";
-import { createAccessToken, createRefreshToken } from "../utils/token.js";
+	createAccessToken,
+	createRefreshToken,
+	hashToken,
+} from "../utils/token.js";
 import UserRepository from "../repositories/user.js";
 
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
@@ -86,7 +84,10 @@ export default class AuthService {
 		const accessToken = createAccessToken(user);
 		const refreshToken = createRefreshToken(user);
 
-		await AuthRepository.updateRefreshToken(user.id, refreshToken);
+		await AuthRepository.updateRefreshToken(
+			user.id,
+			hashToken(refreshToken),
+		);
 		return { accessToken, refreshToken };
 	}
 
@@ -108,14 +109,17 @@ export default class AuthService {
 
 		const user = await AuthRepository.findById(payload.id);
 
-		if (!user || user.refreshToken !== refreshToken) {
+		if (!user || user.refreshToken !== hashToken(refreshToken)) {
 			throw AppError.unauthorized("Invalid refresh token");
 		}
 
 		const accessToken = createAccessToken(user);
 		const newRefreshToken = createRefreshToken(user);
 
-		await AuthRepository.updateRefreshToken(user.id, newRefreshToken);
+		await AuthRepository.updateRefreshToken(
+			user.id,
+			hashToken(newRefreshToken),
+		);
 
 		return {
 			accessToken,
@@ -128,7 +132,9 @@ export default class AuthService {
 
 		checkRefreshToken(refreshToken);
 
-		const user = await AuthRepository.findByRefreshToken(refreshToken);
+		const user = await AuthRepository.findByRefreshToken(
+			hashToken(refreshToken),
+		);
 
 		if (user) {
 			await AuthRepository.updateRefreshToken(user.id, null);

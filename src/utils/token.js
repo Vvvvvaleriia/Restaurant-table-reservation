@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
@@ -19,4 +20,8 @@ export function createRefreshToken(user) {
 
 export function verifyRefreshToken(token) {
 	return jwt.verify(token, JWT_REFRESH_SECRET);
+}
+
+export function hashToken(token) {
+	return crypto.createHash("sha256").update(token).digest("hex");
 }
