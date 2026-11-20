@@ -1,20 +1,27 @@
 import ReservationRepository from "../repositories/reservation.js";
-import TableRepository from "../repositories/table.js";
-import UserRepository from "../repositories/user.js";
-import { AppError } from "../errrors/AppError.js";
+import { AppError } from "../errors/AppError.js";
 import { sequelize } from "../db.js";
+import { paginatedResponse, parsePagination } from "../utils/pagination.js";
+import {
+	checkAllowedFields,
+	checkNumber,
+	checkUuid,
+	parseFutureDate,
+} from "../utils/validation.js";
+import {
+	reservationExists,
+	reservedTableExists,
+	tableExists,
+	userExists,
+} from "../utils/exists.js";
+import { checkOwnerOrAdmin } from "../utils/access.js";
+
+const STATUSES = ["active", "cancelled", "completed"];
 
 export default class ReservationService {
 	static async create(userId, data) {
 		const allowedFields = ["reservationDatetime", "guests", "tableId"];
-
-		const invalidFields = Object.keys(data).some(
-			(field) => !allowedFields.includes(field),
-		);
-
-		if (invalidFields) {
-			throw AppError.badRequest("Request contains invalid fields");
-		}
+		checkAllowedFields(allowedFields, data);
 
 		const { reservationDatetime, guests, tableId } = data;
 
@@ -28,44 +35,13 @@ export default class ReservationService {
 			);
 		}
 
-		const reservationDate = new Date(reservationDatetime);
+		const reservationDate = parseFutureDate(reservationDatetime);
+		checkNumber(guests, "Guests must be a positive integer");
+		checkUuid(tableId, "table");
 
-		if (
-			typeof reservationDatetime !== "string" ||
-			!reservationDatetime.trim() ||
-			Number.isNaN(reservationDate.getTime())
-		) {
-			throw AppError.badRequest("Invalid reservation date and time");
-		}
+		await userExists(userId);
 
-		if (reservationDate <= new Date()) {
-			throw AppError.badRequest(
-				"Reservation date and time must be in the future",
-			);
-		}
-
-		if (!Number.isInteger(guests) || guests < 1) {
-			throw AppError.badRequest("Guests must be a positive integer");
-		}
-
-		const uuidRegex =
-			/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-		if (typeof tableId !== "string" || !uuidRegex.test(tableId)) {
-			throw AppError.badRequest("Invalid table ID");
-		}
-
-		const user = await UserRepository.findById(userId);
-
-		if (!user) {
-			throw AppError.notFound("User not found");
-		}
-
-		const table = await TableRepository.findById(tableId);
-
-		if (!table) {
-			throw AppError.notFound("Table not found");
-		}
+		const table = await tableExists(tableId);
 
 		if (guests > table.seats) {
 			throw AppError.badRequest(
@@ -73,16 +49,7 @@ export default class ReservationService {
 			);
 		}
 
-		const reservedTable = await ReservationRepository.findTimeConflict(
-			tableId,
-			reservationDatetime,
-		);
-
-		if (reservedTable) {
-			throw AppError.conflict(
-				"This table has active reservation for this time",
-			);
-		}
+		await checkTableAvailable(tableId, reservationDate);
 
 		return await ReservationRepository.create({
 			reservationDatetime: reservationDate,
@@ -96,46 +63,20 @@ export default class ReservationService {
 		const parsedLimit = Number(limit);
 		const parsedPage = Number(page);
 
-		if (
-			!Number.isInteger(parsedLimit) ||
-			!Number.isInteger(parsedPage) ||
-			parsedLimit < 1 ||
-			parsedLimit > 100 ||
-			parsedPage < 1
-		) {
-			throw AppError.badRequest(
-				"Limit must be 1-100 and page must be a positive integer",
-			);
-		}
-
-		const offset = (parsedPage - 1) * parsedLimit;
+		const { offset } = parsePagination(parsedLimit, parsedPage);
 
 		const { count, rows } = await ReservationRepository.findAll({
 			limit: parsedLimit,
 			offset,
 		});
 
-		return {
-			data: rows,
-			pagination: {
-				totalItems: count,
-				totalPages: Math.ceil(count / parsedLimit),
-				currentPage: parsedPage,
-				limit: parsedLimit,
-			},
-		};
+		return paginatedResponse(count, rows, parsedLimit, parsedPage);
 	}
 
 	static async getById(userId, role, id) {
-		const reservation = await ReservationRepository.findById(id);
+		const reservation = await reservedTableExists(id);
 
-		if (!reservation) {
-			throw AppError.notFound("Reservation not found");
-		}
-
-		if (reservation.userId !== userId && role !== "admin") {
-			throw AppError.forbidden("Access denied");
-		}
+		checkOwnerOrAdmin(reservation.userId, userId, role);
 
 		return reservation;
 	}
@@ -147,79 +88,51 @@ export default class ReservationService {
 			"tableId",
 			"status",
 		];
+		checkAllowedFields(allowedFields, data);
 
-		const fields = Object.keys(data);
+		const reservation = await reservationExists(id);
 
-		if (
-			fields.length === 0 ||
-			fields.some((field) => !allowedFields.includes(field))
-		) {
-			throw AppError.badRequest("Invalid or empty request body");
+		const changesDetails =
+			reservationDatetime !== undefined ||
+			guests !== undefined ||
+			tableId !== undefined;
+
+		if (changesDetails && reservation.reservationDatetime <= new Date()) {
+			throw AppError.conflict("Reservation can't be updated");
 		}
 
-		const reservation = await ReservationRepository.findById(id);
+		const changes = {};
 
-		if (!reservation) {
-			throw AppError.notFound("Reservation not found");
-		}
-
-		if (reservation.reservationDatetime <= new Date()) {
-			throw AppError.conflict("Reservation can`t be updated");
-		}
-
-		const { reservationDatetime, guests, tableId, status } = data;
-
-		if (
-			status !== undefined &&
-			(typeof status !== "string" ||
-				!["active", "cancelled", "completed"].includes(status))
-		) {
-			throw AppError.badRequest(
-				"Status must be string with meaning active, cancelled or completed",
+		if (status !== undefined) {
+			checkEnum(
+				status,
+				STATUSES,
+				"Status must be active, cancelled or completed",
 			);
+			changes.status = status;
 		}
-
-		let reservationDate = reservation.reservationDatetime;
 
 		if (reservationDatetime !== undefined) {
-			reservationDate = Date(reservationDatetime);
-			if (
-				typeof reservationDatetime !== "string" ||
-				!reservationDatetime.trim() ||
-				Number.isNaN(reservationDate.getTime())
-			) {
-				throw AppError.badRequest("Invalid reservation date and time");
-			}
-
-			if (reservationDate <= new Date()) {
-				throw AppError.badRequest(
-					"Reservation date and time must be in the future",
-				);
-			}
+			changes.reservationDatetime = parseFutureDate(reservationDatetime);
 		}
 
-		if (guests !== undefined && (!Number.isInteger(guests) || guests < 1)) {
-			throw AppError.badRequest("Guests must be a positive integer");
+		if (guests !== undefined) {
+			checkNumber(guests, "Guests must be a positive integer");
+			changes.guests = guests;
 		}
-
-		const uuidRegex =
-			/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 		if (tableId !== undefined) {
-			if (typeof tableId !== "string" || !uuidRegex.test(tableId)) {
-				throw AppError.badRequest("Invalid table ID");
-			}
+			checkUuid(tableId, "table");
+			changes.tableId = tableId;
 		}
 
-		const targetTable = await TableRepository.findById(
-			tableId !== undefined ? tableId : reservation.tableId,
-		);
+		const targetTableId = changes.tableId ?? reservation.tableId;
+		const targetGuests = changes.guests ?? reservation.guests;
+		const targetStatus = changes.status ?? reservation.status;
+		const targetDate =
+			changes.reservationDatetime ?? reservation.reservationDatetime;
 
-		if (!targetTable) {
-			throw AppError.notFound("Table not found");
-		}
-
-		const targetGuests = guests !== undefined ? guests : reservation.guests;
+		const targetTable = await tableExists(targetTableId);
 
 		if (targetGuests > targetTable.seats) {
 			throw AppError.badRequest(
@@ -227,56 +140,29 @@ export default class ReservationService {
 			);
 		}
 
-		const targetStatus = status !== undefined ? status : reservation.status;
-
 		if (
 			targetStatus === "active" &&
-			(reservationDatetime !== undefined ||
-				tableId !== undefined ||
-				reservation.status !== "active")
+			(changesDetails || reservation.status !== "active")
 		) {
-			const reservedTable = await ReservationRepository.findTimeConflict(
-				tableId !== undefined ? tableId : reservation.tableId,
-				reservationDate,
-				id,
-			);
-
-			if (reservedTable) {
-				throw AppError.conflict("This table can`t be reserved");
-			}
+			await checkTableAvailable(targetTableId, targetDate, id);
 		}
 
-		return await ReservationRepository.update(reservation, {
-			...(reservationDatetime !== undefined && {
-				reservationDatetime: reservationDate,
-			}),
-			...(guests !== undefined && { guests }),
-			...(tableId !== undefined && { tableId }),
-			...(status !== undefined && { status }),
-		});
+		return await ReservationRepository.update(reservation, changes);
 	}
 
 	static async cancel(userId, role, id) {
-		const reservation = await ReservationRepository.findById(id);
+		const reservation = await reservationExists(id);
 
-		if (!reservation) {
-			throw AppError.notFound("Reservation not found");
-		}
-
-		if (reservation.userId !== userId && role !== "admin") {
-			throw AppError.forbidden("Access denied");
-		}
+		checkOwnerOrAdmin(reservation.userId, userId, role);
 
 		if (["cancelled", "completed"].includes(reservation.status)) {
 			throw AppError.conflict("Reservation can't be cancelled");
 		}
 
-		if (role !== "admin") {
-			if (reservation.reservationDatetime <= new Date()) {
-				throw new AppError.conflict(
-					"Reservation has already started or passed",
-				);
-			}
+		if (role !== "admin" && reservation.reservationDatetime <= new Date()) {
+			throw new AppError.conflict(
+				"Reservation has already started or passed",
+			);
 		}
 
 		return await ReservationRepository.update(reservation, {
@@ -288,20 +174,13 @@ export default class ReservationService {
 		const transaction = await sequelize.transaction();
 
 		try {
-			const reservation = await ReservationRepository.findById(
-				id,
-				transaction,
-			);
+			const reservation = await reservationExists(id, transaction);
 
-			if (!reservation) {
-				throw AppError.notFound("Reservation not found");
-			}
+			checkOwnerOrAdmin(reservation.userId, userId, role);
 
-			if (reservation.userId !== userId && role !== "admin") {
-				throw AppError.forbidden("Access denied");
-			}
+			await ReviewRepository.deleteByReservationId(id, transaction);
+			await ReservationRepository.softDelete(reservation, transaction);
 
-			await ReservationRepository.delete(id, transaction);
 			await transaction.commit();
 			return reservation;
 		} catch (error) {

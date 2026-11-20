@@ -38,13 +38,14 @@ export default class ReservationRepository {
 		});
 	}
 
-	static async findById(id) {
+	static async findById(id, transaction) {
 		return await Reservation.findOne({
 			where: {
-				id: id,
+				id,
 				deletedAt: null,
 			},
 			include: includeToReservation,
+			transaction,
 		});
 	}
 
@@ -85,7 +86,28 @@ export default class ReservationRepository {
 		return await reservation.update(data);
 	}
 
-	static async delete(id, transaction) {
+	static async cancelActiveByUserId(userId, transaction) {
+		return await Reservation.update(
+			{ status: "cancelled" },
+			{ where: { userId, status: "active" }, transaction },
+		);
+	}
+
+	static async cancelActiveByTableId(tableId, transaction) {
+		return await Reservation.update(
+			{ status: "cancelled" },
+			{
+				where: {
+					tableId,
+					status: "active",
+					reservationDatetime: { [Op.gt]: new Date() },
+				},
+				transaction,
+			},
+		);
+	}
+
+	static async softDelete(id, transaction) {
 		const reservation = await Reservation.findByPk(id, { transaction });
 
 		if (!reservation) {

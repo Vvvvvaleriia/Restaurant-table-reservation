@@ -1,17 +1,23 @@
 import ReviewRepository from "../repositories/review.js";
-import ReservationRepository from "../repositories/reservation.js";
-import { AppError } from "../errrors/AppError.js";
+import { AppError } from "../errors/AppError.js";
+import { paginatedResponse, parsePagination } from "../utils/pagination.js";
+import {
+	checkAllowedFields,
+	checkNumber,
+	checkUuid,
+	checkNullableString,
+} from "../utils/validation.js";
+import {
+	reservationExists,
+	reviewAllreadyExists,
+	reviewExists,
+} from "../utils/exists.js";
+import { checkOwnerOrAdmin } from "../utils/access.js";
 
 export default class ReviewService {
 	static async create(userId, data) {
 		const allowedFields = ["reservationId", "rating", "comment"];
-		const invalidFields = Object.keys(data).some(
-			(field) => !allowedFields.includes(field),
-		);
-
-		if (invalidFields) {
-			throw AppError.badRequest("Request contains invalid fields");
-		}
+		checkAllowedFields(allowedFields, data);
 
 		const { reservationId, rating, comment } = data;
 
@@ -19,33 +25,13 @@ export default class ReviewService {
 			throw AppError.badRequest("reservation ID and rating are required");
 		}
 
-		if (
-			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-				reservationId,
-			)
-		) {
-			throw AppError.badRequest("Invalid reservation ID");
-		}
+		checkUuid(reservationId, "reservation");
+		checkNumber(rating, "Rating must be an integer between 1 and 5", {
+			max: 5,
+		});
+		checkNullableString(comment, "Comment must be a string");
 
-		if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-			throw AppError.badRequest(
-				"Rating must be an integer between 1 and 5",
-			);
-		}
-
-		if (
-			comment !== undefined &&
-			comment !== null &&
-			(typeof comment !== "string" || !comment.trim())
-		) {
-			throw AppError.badRequest("Comment must be a string");
-		}
-
-		const reservation = await ReservationRepository.findById(reservationId);
-
-		if (!reservation) {
-			throw AppError.notFound("Reservation not found");
-		}
+		const reservation = await reservationExists(reservationId);
 
 		if (reservation.userId !== userId) {
 			throw AppError.forbidden("This is not your reservation");
@@ -57,20 +43,13 @@ export default class ReviewService {
 			);
 		}
 
-		const existingReview =
-			await ReviewRepository.findByReservationId(reservationId);
-
-		if (existingReview) {
-			throw AppError.conflict(
-				"Review for this reservation already exists",
-			);
-		}
+		await reviewAllreadyExists(reservationId);
 
 		return await ReviewRepository.create({
 			userId,
 			reservationId,
 			rating,
-			comment: comment?.trim() || null,
+			comment: comment?.trim() ?? null,
 		});
 	}
 
@@ -78,106 +57,51 @@ export default class ReviewService {
 		const parsedLimit = Number(limit);
 		const parsedPage = Number(page);
 
-		if (
-			!Number.isInteger(parsedLimit) ||
-			!Number.isInteger(parsedPage) ||
-			parsedLimit < 1 ||
-			parsedLimit > 100 ||
-			parsedPage < 1
-		) {
-			throw AppError.badRequest(
-				"Limit must be 1-100 and page must be a positive integer",
-			);
-		}
-
-		const offset = (parsedPage - 1) * parsedLimit;
+		const { offset } = parsePagination(parsedLimit, parsedPage);
 
 		const { count, rows } = await ReviewRepository.findAll({
 			limit: parsedLimit,
 			offset,
 		});
 
-		return {
-			data: rows,
-			pagination: {
-				totalItems: count,
-				totalPages: Math.ceil(count / parsedLimit),
-				currentPage: parsedPage,
-				limit: parsedLimit,
-			},
-		};
+		return paginatedResponse(count, rows, parsedLimit, parsedPage);
 	}
 
 	static async getById(id) {
-		const review = await ReviewRepository.findById(id);
-
-		if (!review) {
-			throw AppError.notFound("Review not found");
-		}
-
-		return review;
+		return await reviewExists(id);
 	}
 
 	static async update(userId, role, id, data) {
 		const allowedFields = ["rating", "comment"];
-		const fields = Object.keys(data);
+		checkAllowedFields(allowedFields, data);
 
-		if (
-			fields.length === 0 ||
-			fields.some((field) => !allowedFields.includes(field))
-		) {
-			throw AppError.badRequest("Invalid or empty request body");
-		}
-
-		const review = await ReviewRepository.findById(id);
-
-		if (!review) {
-			throw AppError.notFound("Review not found");
-		}
-
-		if (review.userId !== userId && role !== "admin") {
-			throw AppError.forbidden("Access denied");
-		}
+		const review = await reviewExists(id);
+		checkOwnerOrAdmin(review.userId, userId, role);
 
 		const { rating, comment } = data;
+		const changes = {};
 
-		if (
-			rating !== undefined &&
-			(!Number.isInteger(rating) || rating < 1 || rating > 5)
-		) {
-			throw AppError.badRequest(
-				"Rating must be an integer between 1 and 5",
-			);
+		if (rating !== undefined) {
+			checkNumber(rating, "Rating must be an integer between 1 and 5", {
+				max: 5,
+			});
+			changes.rating = rating;
 		}
 
-		if (
-			comment !== undefined &&
-			comment !== null &&
-			(typeof comment !== "string" || !comment.trim())
-		) {
-			throw AppError.badRequest("Comment must be a string");
+		if (comment !== undefined) {
+			checkNullableString(comment, "Comment must be a string");
+			changes.comment = comment?.trim() ?? null;
 		}
 
-		await ReviewRepository.update(review, {
-			...(rating !== undefined && { rating }),
-			...(comment !== undefined && {
-				comment: comment === null ? null : comment.trim(),
-			}),
-		});
+		await ReviewRepository.update(review, changes);
 
 		return review;
 	}
 
 	static async delete(userId, role, id) {
-		const review = await ReviewRepository.findById(id);
+		const review = await reviewExists(id);
 
-		if (!review) {
-			throw AppError.notFound("Review not found");
-		}
-
-		if (review.userId !== userId && role !== "admin") {
-			throw AppError.forbidden("Access denied");
-		}
+		checkOwnerOrAdmin(review.userId, userId, role);
 
 		return await ReviewRepository.delete(review);
 	}

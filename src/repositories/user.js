@@ -15,15 +15,16 @@ export default class UserRepository {
 		});
 	}
 
-	static async findById(id) {
+	static async findById(id, transaction) {
 		return await User.findOne({
 			where: {
-				id: id,
+				id,
 				deletedAt: null,
 			},
 			attributes: {
 				exclude: ["passwordHash", "refreshToken"],
 			},
+			transaction,
 		});
 	}
 
@@ -36,18 +37,15 @@ export default class UserRepository {
 		});
 	}
 
-	static async update(user, data) {
-		return await user.update(data);
+	static async update(user, data, transaction) {
+		return await user.update(data, { transaction });
 	}
 
-	static async delete(id, transaction) {
-		const user = await User.findByPk(id, { transaction });
+	static async updateRefreshToken(user, transaction) {
+		return await user.update({ refreshToken: null }, { transaction });
+	}
 
-		if (!user) {
-			return null;
-		}
-
-		await user.destroy({ transaction });
-		return user;
+	static async softDelete(user, transaction) {
+		return await user.destroy({ transaction });
 	}
 }

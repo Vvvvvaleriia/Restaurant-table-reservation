@@ -1,18 +1,22 @@
 import TableRepository from "../repositories/table.js";
-import TableTypeRepository from "../repositories/tableType.js";
-import { AppError } from "../errrors/AppError.js";
+import { AppError } from "../errors/AppError.js";
 import { sequelize } from "../db.js";
+import { paginatedResponse, parsePagination } from "../utils/pagination.js";
+import {
+	checkAllowedFields,
+	checkNumber,
+	checkUuid,
+} from "../utils/validation.js";
+import {
+	tableExists,
+	tableNumberExists,
+	tableTypeExists,
+} from "../utils/exists.js";
 
 export default class TableService {
 	static async create(data) {
 		const allowedFields = ["tableNumber", "seats", "tableTypeId"];
-		const invalidFields = Object.keys(data).some(
-			(field) => !allowedFields.includes(field),
-		);
-
-		if (invalidFields) {
-			throw AppError.badRequest("Request contains invalid fields");
-		}
+		checkAllowedFields(allowedFields, data);
 
 		const { tableNumber, seats, tableTypeId } = data;
 
@@ -26,36 +30,14 @@ export default class TableService {
 			);
 		}
 
-		if (!Number.isInteger(tableNumber) || tableNumber < 1) {
-			throw AppError.badRequest(
-				"Table number must be a positive integer",
-			);
-		}
+		checkNumber(tableNumber, "Table number");
+		checkNumber(seats, "Seats");
 
-		if (!Number.isInteger(seats) || seats < 1) {
-			throw AppError.badRequest("Seats must be a positive number");
-		}
+		checkUuid(tableTypeId, "table type");
 
-		if (
-			!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-				tableTypeId,
-			)
-		) {
-			throw AppError.badRequest("Invalid table type ID");
-		}
+		await tableTypeExists(tableTypeId);
 
-		const tableType = await TableTypeRepository.findById(tableTypeId);
-
-		if (!tableType) {
-			throw AppError.notFound("Table type not found");
-		}
-
-		const existingTableNumber =
-			await TableRepository.findByNumber(tableNumber);
-
-		if (existingTableNumber) {
-			throw AppError.conflict("This table number already exists");
-		}
+		await tableNumberExists(tableNumber);
 
 		const table = await TableRepository.create({
 			tableNumber,
@@ -75,112 +57,51 @@ export default class TableService {
 		const parsedLimit = Number(limit);
 		const parsedPage = Number(page);
 
-		if (
-			!Number.isInteger(parsedLimit) ||
-			!Number.isInteger(parsedPage) ||
-			parsedLimit < 1 ||
-			parsedLimit > 100 ||
-			parsedPage < 1
-		) {
-			throw AppError.badRequest(
-				"Limit must be 1-100 and page must be a positive integer",
-			);
-		}
-
-		const offset = (parsedPage - 1) * parsedLimit;
+		const { offset } = parsePagination(parsedLimit, parsedPage);
 
 		const { count, rows } = await TableRepository.findAll({
 			limit: parsedLimit,
 			offset,
 		});
 
-		return {
-			data: rows,
-			pagination: {
-				totalItems: count,
-				totalPages: Math.ceil(count / parsedLimit),
-				currentPage: parsedPage,
-				limit: parsedLimit,
-			},
-		};
+		return paginatedResponse(count, rows, parsedLimit, parsedPage);
 	}
 
 	static async getById(id) {
-		const table = await TableRepository.findById(id);
-
-		if (!table) {
-			throw AppError.notFound("Table not found");
-		}
-
-		return table;
+		return await tableExists(id);
 	}
 
 	static async update(id, data) {
 		const allowedFields = ["tableNumber", "seats", "tableTypeId"];
-		const fields = Object.keys(data);
-
-		if (
-			fields.length === 0 ||
-			fields.some((field) => !allowedFields.includes(field))
-		) {
-			throw AppError.badRequest("Invalid or empty request body");
-		}
-
-		const table = await TableRepository.findById(id);
-
-		if (!table) {
-			throw AppError.notFound("Table not found");
-		}
+		checkAllowedFields(allowedFields, data);
 
 		const { tableNumber, seats, tableTypeId } = data;
 
-		if (
-			tableNumber !== undefined &&
-			(!Number.isInteger(tableNumber) || tableNumber < 1)
-		) {
-			throw AppError.badRequest(
-				"Table number must be a positive integer",
-			);
-		}
+		const table = tableExists(id);
 
-		if (seats !== undefined && (!Number.isInteger(seats) || seats < 1)) {
-			throw AppError.badRequest("Seats must be a positive integer");
-		}
-
-		if (tableTypeId !== undefined) {
-			if (
-				!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-					tableTypeId,
-				)
-			) {
-				throw AppError.badRequest("Invalid table type ID");
-			}
-		}
-
-		if (tableTypeId !== undefined) {
-			const tableType = await TableTypeRepository.findById(tableTypeId);
-
-			if (!tableType) {
-				throw AppError.notFound("Table type not found");
-			}
-		}
+		const changes = {};
 
 		if (tableNumber !== undefined) {
-			const existingTable =
-				await TableRepository.findByNumber(tableNumber);
+			checkNumber(tableNumber, "Table number");
 
-			if (existingTable && existingTable.id !== table.id) {
-				throw AppError.conflict("This table number already exists");
+			if (tableNumber !== table.tableNumber) {
+				await tableNumberExists(tableNumber);
 			}
+			changes.tableNumber = tableNumber;
 		}
 
-		await TableRepository.update(table, {
-			...(tableNumber !== undefined && { tableNumber }),
-			...(seats !== undefined && {
-				seats,
-			}),
-			...(tableTypeId !== undefined && { tableTypeId }),
-		});
+		if (seats !== undefined) {
+			checkNumber(seats, "Seats");
+			changes.seats = seats;
+		}
+
+		if (tableTypeId !== undefined) {
+			checkUuid(tableTypeId, "table type");
+			await tableTypeExists(tableTypeId);
+			changes.tableTypeId = tableTypeId;
+		}
+
+		await TableRepository.update(table, changes);
 
 		return table;
 	}
@@ -189,13 +110,11 @@ export default class TableService {
 		const transaction = await sequelize.transaction();
 
 		try {
-			const table = await TableRepository.findById(id, transaction);
+			const table = await tableExists(id);
 
-			if (!table) {
-				throw AppError.notFound("Table not found");
-			}
+			await ReservationRepository.cancelActiveByTableId(id, transaction);
+			await TableRepository.softDeletedelete(table, transaction);
 
-			await TableRepository.delete(id, transaction);
 			await transaction.commit();
 			return table;
 		} catch (error) {

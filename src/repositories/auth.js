@@ -3,12 +3,14 @@ import { User } from "../models/index.js";
 export default class AuthRepository {
 	static async findByEmail(email) {
 		return await User.findOne({
-			where: { email },
+			where: { email, deletedAt: null },
 		});
 	}
 
 	static async findById(id) {
-		return await User.findByPk(id);
+		return await User.findOne({
+			where: { id, deletedAt: null },
+		});
 	}
 
 	static async findByRefreshToken(refreshToken) {
@@ -20,7 +22,8 @@ export default class AuthRepository {
 	}
 
 	static async findProfile(id) {
-		return await User.findByPk(id, {
+		return await User.findOne({
+			where: { id, deletedAt: null },
 			attributes: ["id", "email", "name", "phone", "role", "createdAt"],
 		});
 	}

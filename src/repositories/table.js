@@ -52,14 +52,7 @@ export default class TableRepository {
 		return await table.update(data);
 	}
 
-	static async delete(id, transaction) {
-		const table = await Table.findByPk(id, { transaction });
-
-		if (!table) {
-			return null;
-		}
-
-		await table.destroy({ transaction });
-		return table;
+	static async softDelete(table, transaction) {
+		return await table.destroy({ transaction });
 	}
 }

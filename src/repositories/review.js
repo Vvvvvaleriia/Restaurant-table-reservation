@@ -40,6 +40,14 @@ export default class ReviewRepository {
 		return await review.update(data);
 	}
 
+	static async deleteByUserId(userId, transaction) {
+		return await Review.destroy({ where: { userId }, transaction });
+	}
+
+	static async deleteByReservationId(reservationId, transaction) {
+		return await Review.destroy({ where: { reservationId }, transaction });
+	}
+
 	static async delete(review) {
 		return await review.destroy();
 	}

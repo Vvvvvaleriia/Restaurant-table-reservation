@@ -1,70 +1,51 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import AuthRepository from "../repositories/auth.js";
+import { AppError } from "../errors/AppError.js";
+import {
+	checkAllowedFields,
+	checkEmail,
+	checkName,
+	checkPassword,
+	checkPhone,
+	checkRefreshToken,
+	verifyRefreshToken,
+} from "../utils/validation.js";
+import {
+	checkEmailNotTaken,
+	profileExists,
+	userByEmailExists,
+	userExists,
+} from "../utils/exists.js";
+import { createAccessToken, createRefreshToken } from "../utils/token.js";
 import UserRepository from "../repositories/user.js";
-import { AppError } from "../errrors/AppError.js";
 
-const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
 export default class AuthService {
-	static async register(body) {
+	static async register(data) {
 		const allowedFields = ["name", "email", "phone", "password"];
-		const invalidFields = Object.keys(body).some(
-			(field) => !allowedFields.includes(field),
-		);
+		checkAllowedFields(allowedFields, data);
 
-		if (invalidFields) {
-			throw AppError.badRequest("Unexpected fields");
-		}
-
-		const { name, email, phone, password } = body;
-
-		if (!name || !email || !phone || !password) {
-			throw AppError.badRequest("All fields are required");
-		}
+		const { name, email, phone, password } = data;
 
 		if (
-			typeof name !== "string" ||
-			typeof email !== "string" ||
-			typeof phone !== "string" ||
-			typeof password !== "string"
+			name === undefined ||
+			email === undefined ||
+			phone === undefined ||
+			password === undefined
 		) {
-			throw AppError.badRequest("Invalid field types");
-		}
-
-		const normalizedName = name.trim();
-		const normalizedEmail = email.trim().toLowerCase();
-		const normalizedPhone = phone.trim();
-
-		if (
-			!normalizedName ||
-			!normalizedEmail ||
-			!normalizedPhone ||
-			!password.trim()
-		) {
-			throw AppError.badRequest("Fields cannot be empty");
-		}
-
-		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-			throw AppError.badRequest("Invalid email");
-		}
-
-		if (!/^\+?[0-9]{10,15}$/.test(normalizedPhone)) {
-			throw AppError.badRequest("Invalid phone number");
-		}
-
-		const existingUser = await UserRepository.findByEmail(normalizedEmail);
-
-		if (existingUser) {
-			throw AppError.conflict("Email already exists");
-		}
-
-		if (password.length < 8 || password.length > 72) {
 			throw AppError.badRequest(
-				"Password must be between 8 and 72 characters",
+				"Name, email, phone and password are required",
 			);
 		}
+
+		const normalizedName = checkName(name);
+		const normalizedEmail = checkEmail(email);
+		const normalizedPhone = checkPhone(phone);
+		checkPassword(password);
+
+		await checkEmailNotTaken(normalizedEmail);
 
 		const passwordHash = await bcrypt.hash(password, 10);
 
@@ -89,7 +70,6 @@ export default class AuthService {
 		if (
 			typeof email !== "string" ||
 			typeof password !== "string" ||
-			!email.trim() ||
 			!password
 		) {
 			throw AppError.badRequest("Email and password are required");
@@ -103,39 +83,25 @@ export default class AuthService {
 			throw AppError.unauthorized("Invalid email or password");
 		}
 
-		const accessToken = jwt.sign(
-			{ id: user.id, email: user.email, role: user.role },
-			JWT_ACCESS_SECRET,
-			{ expiresIn: "15m" },
-		);
-
-		const refreshToken = jwt.sign({ id: user.id }, JWT_REFRESH_SECRET, {
-			expiresIn: "7d",
-		});
+		const accessToken = createAccessToken(user);
+		const refreshToken = createRefreshToken(user);
 
 		await AuthRepository.updateRefreshToken(user.id, refreshToken);
 		return { accessToken, refreshToken };
 	}
 
 	static async profile(userId) {
-		const user = await AuthRepository.findProfile(userId);
-
-		if (!user) {
-			throw AppError.notFound("User not found");
-		}
-		return user;
+		return await profileExists(userId);
 	}
 
 	static async refresh(body) {
 		const { refreshToken } = body;
 
-		if (typeof refreshToken !== "string" || !refreshToken) {
-			throw AppError.badRequest("Refresh token is required");
-		}
+		checkRefreshToken(refreshToken);
 
 		let payload;
 		try {
-			payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+			payload = verifyRefreshToken(refreshToken);
 		} catch {
 			throw AppError.unauthorized("Invalid or expired refresh token");
 		}
@@ -146,17 +112,8 @@ export default class AuthService {
 			throw AppError.unauthorized("Invalid refresh token");
 		}
 
-		const accessToken = jwt.sign(
-			{ id: user.id, email: user.email, role: user.role },
-			JWT_ACCESS_SECRET,
-			{
-				expiresIn: "15m",
-			},
-		);
-
-		const newRefreshToken = jwt.sign({ id: user.id }, JWT_REFRESH_SECRET, {
-			expiresIn: "7d",
-		});
+		const accessToken = createAccessToken(user);
+		const newRefreshToken = createRefreshToken(user);
 
 		await AuthRepository.updateRefreshToken(user.id, newRefreshToken);
 
@@ -169,9 +126,7 @@ export default class AuthService {
 	static async logout(body) {
 		const { refreshToken } = body;
 
-		if (typeof refreshToken !== "string" || !refreshToken) {
-			throw AppError.badRequest("Refresh token is required");
-		}
+		checkRefreshToken(refreshToken);
 
 		const user = await AuthRepository.findByRefreshToken(refreshToken);
 

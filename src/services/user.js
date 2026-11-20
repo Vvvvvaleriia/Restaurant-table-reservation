@@ -1,121 +1,69 @@
 import UserRepository from "../repositories/user.js";
-import { AppError } from "../errrors/AppError.js";
+import { AppError } from "../errors/AppError.js";
 import { sequelize } from "../db.js";
+import { paginatedResponse, parsePagination } from "../utils/pagination.js";
+import checkOwnerOrAdmin from "../utils/access.js";
+import { userExists, checkEmailNotTaken } from "../utils/exists.js";
+import {
+	checkAllowedFields,
+	checkEmail,
+	checkName,
+	checkPhone,
+} from "../utils/validation.js";
+import ReservationRepository from "../repositories/reservation.js";
+import { Review } from "../models/review.js";
+import ReviewRepository from "../repositories/review.js";
 
 export default class UserService {
 	static async getAll(limit, page) {
 		const parsedLimit = Number(limit);
 		const parsedPage = Number(page);
 
-		if (
-			!Number.isInteger(parsedLimit) ||
-			!Number.isInteger(parsedPage) ||
-			parsedLimit < 1 ||
-			parsedLimit > 100 ||
-			parsedPage < 1
-		) {
-			throw AppError.badRequest(
-				"Limit must be 1-100 and page must be a positive integer",
-			);
-		}
-
-		const offset = (parsedPage - 1) * parsedLimit;
+		const { offset } = parsePagination(parsedLimit, parsedPage);
 
 		const { count, rows } = await UserRepository.findAll({
 			limit: parsedLimit,
 			offset,
 		});
 
-		return {
-			data: rows,
-			pagination: {
-				totalItems: count,
-				totalPages: Math.ceil(count / parsedLimit),
-				currentPage: parsedPage,
-				limit: parsedLimit,
-			},
-		};
+		return paginatedResponse(count, rows, parsedLimit, parsedPage);
 	}
 
 	static async getById(userId, role, id) {
-		const user = await UserRepository.findById(id);
+		checkOwnerOrAdmin(user.id, userId, role);
 
-		if (!user) {
-			throw AppError.notFound("User not found");
-		}
-
-		if (user.id !== userId && role !== "admin") {
-			throw AppError.forbidden("Access denied");
-		}
-
-		return user;
+		return await userExists(id);
 	}
 
 	static async update(userId, role, id, data) {
+		const allowedFields = ["name", "email", "phone"];
+		checkAllowedFields(allowedFields, data);
+
+		checkOwnerOrAdmin(user.id, userId, role);
+
 		const { name, email, phone } = data;
 
-		const allowedFields = ["name", "email", "phone"];
-		const fields = Object.keys(data);
+		const user = await userExists(id);
 
-		if (
-			fields.length === 0 ||
-			fields.some((field) => !allowedFields.includes(field))
-		) {
-			throw AppError.badRequest("Invalid or empty request body");
-		}
-
-		const user = await UserRepository.findById(id);
-
-		if (!user) {
-			throw AppError.notFound("User not found");
-		}
-
-		if (user.id !== userId && role !== "admin") {
-			throw AppError.forbidden("Access denied");
-		}
+		const changes = {};
 
 		if (name !== undefined) {
-			if (typeof name !== "string" || !name.trim()) {
-				throw AppError.badRequest("Invalid name");
-			}
-		}
-
-		let normalizedEmail;
-		if (email !== undefined) {
-			if (typeof email !== "string") {
-				throw AppError.badRequest("Invalid email");
-			}
-
-			normalizedEmail = email.trim().toLowerCase();
-
-			if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-				throw AppError.badRequest("Invalid email");
-			}
+			changes.name = checkName(name);
 		}
 
 		if (email !== undefined) {
-			const existingUser =
-				await UserRepository.findByEmail(normalizedEmail);
+			changes.email = checkEmail(email);
 
-			if (existingUser && existingUser.id !== user.id) {
-				throw AppError.conflict("Email already exists");
+			if (changes.email !== user.email) {
+				await checkEmailNotTaken(changes.email);
 			}
 		}
 
 		if (phone !== undefined) {
-			if (
-				typeof phone !== "string" ||
-				!/^\+?[0-9]{10,15}$/.test(phone.trim())
-			) {
-				throw AppError.badRequest("Invalid phone number");
-			}
+			changes.phone = checkPhone(phone);
 		}
 
-		await UserRepository.update(user, {
-			...(name !== undefined && { name: name.trim() }),
-			...(email !== undefined && { email: normalizedEmail }),
-			...(phone !== undefined && { phone: phone.trim() }),
-		});
+		await UserRepository.update(user, changes);
 
 		return {
 			id: user.id,
@@ -126,20 +74,17 @@ export default class UserService {
 	}
 
 	static async delete(userId, role, id) {
+		checkOwnerOrAdmin(id, userId, role);
+
 		const transaction = await sequelize.transaction();
 
 		try {
-			const user = await UserRepository.findById(id);
+			const user = await userExists(id, transaction);
 
-			if (!user) {
-				throw AppError.notFound("User not found");
-			}
+			await ReservationRepository.cancelActiveByUserId(id, transaction);
+			await ReviewRepository.deleteByUserId(id, transaction);
+			await UserRepository.softDelete(user, transaction);
 
-			if (user.id !== userId && role !== "admin") {
-				throw AppError.forbidden("Access denied");
-			}
-
-			await UserRepository.delete(id, transaction);
 			await transaction.commit();
 			return user;
 		} catch (error) {

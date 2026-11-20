@@ -1,16 +1,18 @@
 import TableTypeRepository from "../repositories/tableType.js";
-import { AppError } from "../errrors/AppError.js";
+import { AppError } from "../errors/AppError.js";
+import { parsePagination, paginatedResponse } from "../utils/pagination.js";
+import {
+	checkAllowedFields,
+	checkMarkup,
+	checkName,
+	checkNullableString,
+} from "../utils/validation.js";
+import { tableTypeExists, tableTypeNameExists } from "../utils/exists.js";
 
 export default class TableTypeService {
 	static async create(data) {
 		const allowedFields = ["name", "description", "markup"];
-		const invalidFields = Object.keys(data).some(
-			(field) => !allowedFields.includes(field),
-		);
-
-		if (invalidFields) {
-			throw AppError.badRequest("Request contains invalid fields");
-		}
+		checkAllowedFields(allowedFields, data);
 
 		const { name, description, markup } = data;
 
@@ -18,35 +20,15 @@ export default class TableTypeService {
 			throw AppError.badRequest("Name and markup are required");
 		}
 
-		if (typeof name !== "string" || !name.trim()) {
-			throw AppError.badRequest("Name must be a non-empty string");
-		}
+		const normalizedName = checkName(name);
+		checkMarkup(markup);
+		checkNullableString(description, "Description must be a string");
 
-		if (
-			typeof markup !== "number" ||
-			!Number.isFinite(markup) ||
-			markup < 0
-		) {
-			throw AppError.badRequest("Markup must be a non-negative number");
-		}
-
-		if (
-			description !== undefined &&
-			description !== null &&
-			(typeof description !== "string" || !description.trim())
-		) {
-			throw AppError.badRequest("Description must be a string");
-		}
-
-		const existingType = await TableTypeRepository.findByName(name.trim());
-
-		if (existingType) {
-			throw AppError.conflict("Table type with this name already exists");
-		}
+		await tableTypeNameExists(name.trim());
 
 		return await TableTypeRepository.create({
-			name: name.trim(),
-			description: description?.trim() || null,
+			name: normalizedName,
+			description: description?.trim() ?? null,
 			markup,
 		});
 	}
@@ -55,115 +37,55 @@ export default class TableTypeService {
 		const parsedLimit = Number(limit);
 		const parsedPage = Number(page);
 
-		if (
-			!Number.isInteger(parsedLimit) ||
-			!Number.isInteger(parsedPage) ||
-			parsedLimit < 1 ||
-			parsedLimit > 100 ||
-			parsedPage < 1
-		) {
-			throw AppError.badRequest(
-				"Limit must be 1-100 and page must be a positive integer",
-			);
-		}
-
-		const offset = (parsedPage - 1) * parsedLimit;
+		const { offset } = parsePagination(parsedLimit, parsedPage);
 
 		const { count, rows } = await TableTypeRepository.findAll({
 			limit: parsedLimit,
 			offset,
 		});
 
-		return {
-			data: rows,
-			pagination: {
-				totalItems: count,
-				totalPages: Math.ceil(count / parsedLimit),
-				currentPage: parsedPage,
-				limit: parsedLimit,
-			},
-		};
+		return paginatedResponse(count, rows, parsedLimit, parsedPage);
 	}
 
 	static async getById(id) {
-		const tableType = await TableTypeRepository.findById(id);
-
-		if (!tableType) {
-			throw AppError.notFound("Table type not found");
-		}
-
-		return tableType;
+		return await tableTypeExists(id);
 	}
 
 	static async update(id, data) {
 		const allowedFields = ["name", "description", "markup"];
-		const fields = Object.keys(data);
-
-		if (
-			fields.length === 0 ||
-			fields.some((field) => !allowedFields.includes(field))
-		) {
-			throw AppError.badRequest("Invalid or empty request body");
-		}
+		checkAllowedFields(allowedFields, data);
 
 		const { name, description, markup } = data;
 
-		if (name !== undefined && (typeof name !== "string" || !name.trim())) {
-			throw AppError.badRequest("Name must be a non-empty string");
-		}
+		const tableType = await tableTypeExists(id);
 
-		if (
-			markup !== undefined &&
-			(typeof markup !== "number" ||
-				!Number.isFinite(markup) ||
-				markup < 0)
-		) {
-			throw AppError.badRequest("Markup must be a non-negative number");
-		}
-
-		if (
-			description !== undefined &&
-			description !== null &&
-			(typeof description !== "string" || !description.trim())
-		) {
-			throw AppError.badRequest("Description must be a string");
-		}
-
-		const tableType = await TableTypeRepository.findById(id);
-
-		if (!tableType) {
-			throw AppError.notFound("Table type not found");
-		}
+		const changes = {};
 
 		if (name !== undefined) {
-			const existingType = await TableTypeRepository.findByName(
-				name.trim(),
-			);
+			changes.name = checkName(name);
 
-			if (existingType && existingType.id !== tableType.id) {
-				throw AppError.conflict(
-					"Table type with this name already exists",
-				);
+			if (changes.name !== tableType.name) {
+				await tableTypeNameExists(changes.name);
 			}
 		}
 
-		await TableTypeRepository.update(tableType, {
-			...(name !== undefined && { name: name.trim() }),
-			...(description !== undefined && {
-				description: description?.trim() || null,
-			}),
-			...(markup !== undefined && { markup }),
-		});
+		if (description !== undefined) {
+			checkNullableString(description, "Description must be a string");
+			changes.description = description?.trim() ?? null;
+		}
+
+		if (markup !== undefined) {
+			checkMarkup(markup);
+			changes.markup = markup;
+		}
+
+		await TableTypeRepository.update(tableType, changes);
 
 		return tableType;
 	}
 
 	static async delete(id) {
-		const tableType = await TableTypeRepository.findById(id);
-
-		if (!tableType) {
-			throw AppError.notFound("Table type not found");
-		}
+		const tableType = await tableTypeExists(id);
 
 		return await TableTypeRepository.delete(tableType);
 	}
