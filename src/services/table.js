@@ -30,8 +30,8 @@ export default class TableService {
 			);
 		}
 
-		checkNumber(tableNumber, "Table number");
-		checkNumber(seats, "Seats");
+		checkNumber(tableNumber, "Table number must be positive integer");
+		checkNumber(seats, "Seats must be positive integer");
 
 		checkUuid(tableTypeId, "table type");
 
@@ -77,12 +77,12 @@ export default class TableService {
 
 		const { tableNumber, seats, tableTypeId } = data;
 
-		const table = tableExists(id);
+		const table = await tableExists(id);
 
 		const changes = {};
 
 		if (tableNumber !== undefined) {
-			checkNumber(tableNumber, "Table number");
+			checkNumber(tableNumber, "Table number must be positive integer");
 
 			if (tableNumber !== table.tableNumber) {
 				await tableNumberExists(tableNumber);
@@ -91,7 +91,7 @@ export default class TableService {
 		}
 
 		if (seats !== undefined) {
-			checkNumber(seats, "Seats");
+			checkNumber(seats, "Seats must be positive integer");
 			changes.seats = seats;
 		}
 
@@ -113,7 +113,7 @@ export default class TableService {
 			const table = await tableExists(id);
 
 			await ReservationRepository.cancelActiveByTableId(id, transaction);
-			await TableRepository.softDeletedelete(table, transaction);
+			await TableRepository.softDeletede(table, transaction);
 
 			await transaction.commit();
 			return table;

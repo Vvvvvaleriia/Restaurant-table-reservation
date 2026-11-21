@@ -12,7 +12,7 @@ import {
 	reviewAllreadyExists,
 	reviewExists,
 } from "../utils/exists.js";
-import { checkOwnerOrAdmin } from "../utils/access.js";
+import checkOwnerOrAdmin from "../utils/access.js";
 
 export default class ReviewService {
 	static async create(userId, data) {

@@ -18,10 +18,6 @@ export function createRefreshToken(user) {
 	});
 }
 
-export function verifyRefreshToken(token) {
-	return jwt.verify(token, JWT_REFRESH_SECRET);
-}
-
 export function hashToken(token) {
 	return crypto.createHash("sha256").update(token).digest("hex");
 }

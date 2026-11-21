@@ -11,7 +11,6 @@ import {
 	checkPhone,
 } from "../utils/validation.js";
 import ReservationRepository from "../repositories/reservation.js";
-import { Review } from "../models/review.js";
 import ReviewRepository from "../repositories/review.js";
 
 export default class UserService {
@@ -30,7 +29,7 @@ export default class UserService {
 	}
 
 	static async getById(userId, role, id) {
-		checkOwnerOrAdmin(user.id, userId, role);
+		checkOwnerOrAdmin(id, userId, role);
 
 		return await userExists(id);
 	}
@@ -39,7 +38,7 @@ export default class UserService {
 		const allowedFields = ["name", "email", "phone"];
 		checkAllowedFields(allowedFields, data);
 
-		checkOwnerOrAdmin(user.id, userId, role);
+		checkOwnerOrAdmin(id, userId, role);
 
 		const { name, email, phone } = data;
 

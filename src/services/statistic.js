@@ -1,8 +1,9 @@
-import StatsRepository from "../repositories/statistic";
-import { checkNumber, parseDate } from "../utils/validation";
+import StatsRepository from "../repositories/statistic.js";
+import { checkNumber, parseDate } from "../utils/validation.js";
+import { AppError } from "../errors/AppError.js";
 
 export default class StatsService {
-	static async getTableTypeStats(to, from, minReservations) {
+	static async getTableTypeStats({ from, to, minReservations }) {
 		const fromDate = parseDate(from, "from");
 		const toDate = parseDate(to, "to");
 		const parseMin = Number(minReservations);
@@ -13,20 +14,20 @@ export default class StatsService {
 			throw AppError.badRequest("'from' must not be later than 'to'");
 		}
 
-		const rows = await StatsRepository.getTableTypeStats(
-			fromDate,
-			toDate,
-			parseMin,
-		);
+		const rows = await StatsRepository.getTableTypeStats({
+			from: fromDate,
+			to: toDate,
+			minReservations: parseMin,
+		});
 
 		return rows.map((row) => ({
-			tableTypeId: row.isSoftDeleted,
+			tableTypeId: row.id,
 			tableTypeName: row.name,
 			reservationsCount: Number(row.reservationsCount),
 			totalGuest: Number(row.totalGuests),
-			avgGuests: Number(row.avgGuest.toFixed(1)),
+			avgGuests: Number(Number(row.avgGuests).toFixed(1)),
 			firstReservation: row.firstReservation,
-			lastReservation: lastReservation,
+			lastReservation: row.lastReservation,
 			reviewsCount: Number(row.reviewsCount),
 			avgRating:
 				row.avgRating === null

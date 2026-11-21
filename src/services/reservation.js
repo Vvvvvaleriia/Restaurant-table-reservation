@@ -7,14 +7,15 @@ import {
 	checkNumber,
 	checkUuid,
 	parseFutureDate,
+	checkEnum,
 } from "../utils/validation.js";
 import {
 	reservationExists,
-	reservedTableExists,
+	checkTableAvailable,
 	tableExists,
 	userExists,
 } from "../utils/exists.js";
-import { checkOwnerOrAdmin } from "../utils/access.js";
+import checkOwnerOrAdmin from "../utils/access.js";
 
 const STATUSES = ["active", "cancelled", "completed"];
 
@@ -74,7 +75,7 @@ export default class ReservationService {
 	}
 
 	static async getById(userId, role, id) {
-		const reservation = await reservedTableExists(id);
+		const reservation = await reservationExists(id);
 
 		checkOwnerOrAdmin(reservation.userId, userId, role);
 
@@ -89,6 +90,8 @@ export default class ReservationService {
 			"status",
 		];
 		checkAllowedFields(allowedFields, data);
+
+		const { reservationDatetime, guests, tableId, status } = data;
 
 		const reservation = await reservationExists(id);
 

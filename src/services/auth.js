@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import AuthRepository from "../repositories/auth.js";
 import { AppError } from "../errors/AppError.js";
 import {
@@ -8,7 +9,6 @@ import {
 	checkPassword,
 	checkPhone,
 	checkRefreshToken,
-	verifyRefreshToken,
 } from "../utils/validation.js";
 import { checkEmailNotTaken, profileExists } from "../utils/exists.js";
 import {
@@ -63,8 +63,10 @@ export default class AuthService {
 	}
 
 	static async login(body) {
-		const { email, password } = body;
+		const allowedFields = ["email", "password"];
+		checkAllowedFields(allowedFields, body);
 
+		const { email, password } = body;
 		if (
 			typeof email !== "string" ||
 			typeof password !== "string" ||
@@ -102,7 +104,7 @@ export default class AuthService {
 
 		let payload;
 		try {
-			payload = verifyRefreshToken(refreshToken);
+			payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
 		} catch {
 			throw AppError.unauthorized("Invalid or expired refresh token");
 		}
@@ -136,9 +138,11 @@ export default class AuthService {
 			hashToken(refreshToken),
 		);
 
-		if (user) {
-			await AuthRepository.updateRefreshToken(user.id, null);
+		if (!user) {
+			throw AppError.unauthorized("Invalid refresh token");
 		}
+
+		await AuthRepository.updateRefreshToken(user.id, null);
 
 		return { message: "Logged out successfully" };
 	}

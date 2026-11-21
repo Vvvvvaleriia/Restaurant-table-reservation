@@ -1,12 +1,12 @@
 import { Router } from "express";
-import authMiddleware from "../middleware/checkToken";
-import adminMiddleware from "../middleware/adminMiddleware";
-import StatsController from "../controllers/statistic";
+import authMiddleware from "../middleware/checkToken.js";
+import adminMiddleware from "../middleware/adminMiddleware.js";
+import StatsController from "../controllers/statistic.js";
 
 export const router = Router();
 
 router.get(
-	"/admin/stats/table-type",
+	"/table-type",
 	authMiddleware,
 	adminMiddleware,
 	StatsController.getTableTypeStats,

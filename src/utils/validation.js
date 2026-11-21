@@ -11,12 +11,6 @@ export function checkAllowedFields(allowedFields, data) {
 	}
 }
 
-export function checkName(name) {
-	if (typeof name !== "string" || !name.trim()) {
-		throw AppError.badRequest("Name must be a non-empty string");
-	}
-}
-
 export function checkNullableString(value, message) {
 	if (
 		value !== undefined &&
@@ -37,13 +31,13 @@ export function checkUuid(value, fieldName) {
 	const uuid =
 		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-	if (typeof value !== "string" || uuid.test(value)) {
+	if (typeof value !== "string" || !uuid.test(value)) {
 		throw AppError.badRequest(`Invalid ${fieldName} ID`);
 	}
 }
 
 export function checkNumber(value, message, { min = 1, max = Infinity } = {}) {
-	if (!Number.isInteger(value) || value < 1 || value < 1 || value > max) {
+	if (!Number.isInteger(value) || value < min || value > max) {
 		throw AppError.badRequest(`${message}`);
 	}
 }
@@ -73,16 +67,16 @@ export function checkEmail(email) {
 }
 
 export function checkPhone(phone) {
-	phoneLike = /^\+?[0-9]{10,15}$/;
+	const phoneLike = /^\+?[0-9]{10,15}$/;
 
 	if (typeof phone !== "string") {
 		throw AppError.badRequest("Invalid phone");
 	}
 
-	const normalizedPhone = email.trim().toLowerCase();
+	const normalizedPhone = phone.trim();
 
 	if (!phoneLike.test(normalizedPhone)) {
-		throw AppError.badRequest("Invalid email");
+		throw AppError.badRequest("Invalid phone");
 	}
 
 	return normalizedPhone;

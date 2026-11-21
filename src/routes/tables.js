@@ -15,7 +15,12 @@ router.post(
 	TableController.create,
 );
 router.get("/", TableController.getAll);
-router.get("/:id", checkUuidMiddleware, TableController.getById);
+router.get(
+	"/:id",
+	authMiddleware,
+	checkUuidMiddleware,
+	TableController.getById,
+);
 router.put(
 	"/:id",
 	authMiddleware,

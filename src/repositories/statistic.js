@@ -1,12 +1,15 @@
-import { col } from "sequelize";
-import { TableType } from "../models";
+import { col, fn, Op, where, literal } from "sequelize";
+import { TableType } from "../models/tableType.js";
+import { Review } from "../models/review.js";
+import { Reservation } from "../models/reservation.js";
+import { Table } from "../models/table.js";
 
 export default class StatsRepository {
 	static async getTableTypeStats({ from, to, minReservations }) {
 		const reservationId = col("tables->reservations.id");
 		const reservationGuests = col("tables->reservations.guests");
 		const reservationDatetime = col(
-			"tables->reservations.reservationDatetime",
+			"tables->reservations.reservation_datetime",
 		);
 		const reviewId = col("tables->reservations->review.id");
 		const reviewRating = col("tables->reservations->review.rating");
@@ -15,7 +18,7 @@ export default class StatsRepository {
 			attributes: [
 				"id",
 				"name",
-				[(fn("COUNT", reservationId), "reservationsCount")],
+				[fn("COUNT", reservationId), "reservationsCount"],
 				[fn("SUM", reservationGuests), "totalGuests"],
 				[fn("AVG", reservationGuests), "avgGuests"],
 				[fn("MIN", reservationDatetime), "firstReservation"],
@@ -54,7 +57,9 @@ export default class StatsRepository {
 				},
 			],
 			group: ["TableType.id", "TableType.name"],
-			having: where(fn("COUNT", reservationId), Op.gte, minReservations),
+			having: literal(
+				`COUNT("tables->reservations"."id") >= ${Number(minReservations)}`,
+			),
 			order: [[literal('"reservationsCount"'), "DESC"]],
 			raw: true,
 		});

@@ -4,6 +4,7 @@ import { AppError } from "../errors/AppError.js";
 import TableRepository from "../repositories/table.js";
 import ReservationRepository from "../repositories/reservation.js";
 import AuthRepository from "../repositories/auth.js";
+import ReviewRepository from "../repositories/review.js";
 
 export async function userExists(id, transaction) {
 	const user = await UserRepository.findById(id, transaction);
@@ -97,7 +98,7 @@ export async function reviewExists(id) {
 	return review;
 }
 
-export async function reservedTableExists(
+export async function checkTableAvailable(
 	tableId,
 	reservationDatetime,
 	excludeReservationId,

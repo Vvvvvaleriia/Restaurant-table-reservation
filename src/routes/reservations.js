@@ -14,7 +14,6 @@ router.post(
 	ReservationController.create,
 );
 router.get("/", authMiddleware, adminMiddleware, ReservationController.getAll);
-//router.get("/my")
 router.get(
 	"/:id",
 	authMiddleware,
